@@ -15,8 +15,7 @@
    limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.google.ar.core.codelabs.hellogeospatial">
+    xmlns:tools="http://schemas.android.com/tools">
 
   <uses-permission android:name="android.permission.CAMERA"/>
   <uses-permission android:name="android.permission.INTERNET"/>
@@ -37,7 +36,7 @@
       tools:ignore="GoogleAppIndexingWarning">
 
     <activity
-        android:name=".HelloGeoActivity"
+        android:name=".TrashcanGeoActivity"
         android:configChanges="orientation|screenSize"
         android:exported="true"
         android:theme="@style/Theme.AppCompat.NoActionBar"

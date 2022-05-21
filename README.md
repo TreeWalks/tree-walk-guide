@@ -1,6 +1,10 @@
 # ARCore Geospatial Codelab project
 
-This repository contains the template used for the [ARCore Geospatial API Codelab](https://developers.google.com/ar/develop/geospatial/java/codelab#0).
+This is an Android App based on the new Google Geospatial API.
+Basically we take advantage of the fact that the Fresno State campus has full Street View coverage.
+Street View contains information to recognize buildings and 
+The app's source code is forked off of the [ARCore Geospatial API Codelab](https://developers.google.com/ar/develop/geospatial/java/codelab#0).
+
 
 This repository contains the following branches:
 
