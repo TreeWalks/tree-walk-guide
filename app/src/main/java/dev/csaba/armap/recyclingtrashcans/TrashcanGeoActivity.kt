@@ -19,6 +19,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.ar.core.Config
 import com.google.ar.core.Session
 import dev.csaba.armap.recyclingtrashcans.helpers.ARCoreSessionLifecycleHelper
 import dev.csaba.armap.recyclingtrashcans.helpers.GeoPermissionsHelper
@@ -82,7 +83,12 @@ class TrashcanGeoActivity : AppCompatActivity() {
 
   // Configure the session, setting the desired options according to your usecase.
   fun configureSession(session: Session) {
-    // TODO: Configure ARCore to use GeospatialMode.ENABLED.
+    session.configure(
+      session.config.apply {
+        // Enable Geospatial Mode.
+        geospatialMode = Config.GeospatialMode.ENABLED
+      }
+    )
   }
 
   override fun onRequestPermissionsResult(
