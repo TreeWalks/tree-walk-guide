@@ -84,22 +84,13 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       virtualSceneFramebuffer = Framebuffer(render, /*width=*/ 1, /*height=*/ 1)
 
       // Virtual object to render (Geospatial Marker)
-      virtualObjectTexture =
-        Texture.createFromAsset(
-          render,
-          "models/spatial_marker_baked.png",
-          Texture.WrapMode.CLAMP_TO_EDGE,
-          Texture.ColorFormat.SRGB
-        )
-
-      virtualObjectMesh = Mesh.createFromAsset(render, "models/geospatial_marker.obj")
+      virtualObjectMesh = Mesh.createFromAsset(render, "models/map_pin.obj")
       virtualObjectShader =
         Shader.createFromAssets(
           render,
           "shaders/ar_unlit_object.vert",
           "shaders/ar_unlit_object.frag",
           /*defines=*/ null)
-          .setTexture("u_Texture", virtualObjectTexture)
 
       backgroundRenderer.setUseDepthVisualization(render, false)
       backgroundRenderer.setUseOcclusion(render, false)
