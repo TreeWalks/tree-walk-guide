@@ -33,13 +33,14 @@ import dev.csaba.armap.recyclingtrashcans.TrashcanGeoActivity
 import dev.csaba.armap.recyclingtrashcans.R
 
 class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
-  private val CAMERA_MARKER_COLOR: Int = Color.argb(255, 0, 255, 0)
-  private val EARTH_MARKER_COLOR: Int = Color.argb(255, 125, 125, 125)
+  private val CAMERA_MARKER_COLOR: Int = Color.argb(255, 255, 0, 0)
+  private val EARTH_MARKER_COLOR: Int = Color.argb(255, 0, 200, 0)
 
   var setInitialCameraPosition = false
   val cameraMarker = createMarker(CAMERA_MARKER_COLOR)
   var cameraIdle = true
 
+  // TODO: make it a list
   val earthMarker = createMarker(EARTH_MARKER_COLOR)
 
   init {

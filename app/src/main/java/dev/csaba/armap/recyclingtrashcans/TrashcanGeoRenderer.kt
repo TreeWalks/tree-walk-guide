@@ -15,13 +15,14 @@
  */
 package dev.csaba.armap.recyclingtrashcans
 
+import android.R
 import android.opengl.Matrix
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Anchor
 import com.google.ar.core.TrackingState
+import com.google.ar.core.exceptions.CameraNotAvailableException
 import dev.csaba.armap.common.helpers.DisplayRotationHelper
 import dev.csaba.armap.common.helpers.TrackingStateHelper
 import dev.csaba.armap.common.samplerender.Framebuffer
@@ -29,9 +30,9 @@ import dev.csaba.armap.common.samplerender.Mesh
 import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
-import com.google.ar.core.exceptions.CameraNotAvailableException
 import java.io.IOException
 
+data class GpsLocation(val lat: Double, val lon: Double, val elevation: Double)
 
 class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
   SampleRender.Renderer, DefaultLifecycleObserver {
@@ -52,11 +53,11 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
   lateinit var virtualObjectShader: Shader
 
   // Temporary matrix allocated here to reduce number of allocations for each frame.
-  val modelMatrix = FloatArray(16)
   val viewMatrix = FloatArray(16)
   val projectionMatrix = FloatArray(16)
-  val modelViewMatrix = FloatArray(16) // view x model
-
+  var gpsLocations: MutableList<GpsLocation> = emptyList<GpsLocation>().toMutableList()
+  var modelMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
+  var modelViewMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
   val modelViewProjectionMatrix = FloatArray(16) // projection x view x model
 
   val session
@@ -92,6 +93,20 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
       backgroundRenderer.setUseDepthVisualization(render, false)
       backgroundRenderer.setUseOcclusion(render, false)
+
+      val locations: Array<String> = activity.resources.getStringArray(R.array.locations)
+      for (location in locations) {
+        val locationParts = location.split(",")
+        gpsLocations.add(
+          GpsLocation(
+            locationParts[0].toDouble(),
+            locationParts[1].toDouble(),
+            locationParts[2].toDouble()
+          )
+        )
+        modelMatrixes.add(FloatArray(16))
+        modelViewMatrixes.add(FloatArray(16))
+      }
     } catch (e: IOException) {
       Log.e(TAG, "Failed to read a required asset file", e)
       showError("Failed to read a required asset file: $e")
@@ -153,6 +168,16 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     // If not tracking, don't draw 3D objects.
     if (camera.trackingState == TrackingState.PAUSED) {
       return
+    } else if (camera.trackingState == TrackingState.TRACKING &&
+      earthAnchors.isEmpty() && gpsLocations.isNotEmpty())
+    {
+      for (earthAnchor in earthAnchors) {
+        earthAnchor.detach()
+      }
+
+      for ((index, gpsLocation) in gpsLocations.withIndex()) {
+        addObjectAnchor(gpsLocation, index)
+      }
     }
 
     // Get projection matrix.
@@ -176,23 +201,22 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     }
 
     // Draw the placed anchor, if it exists.
-    earthAnchor?.let {
-      render.renderObjectAtAnchor(it)
+    for ((index, earthAnchor) in earthAnchors.withIndex()) {
+      render.renderObjectAtAnchor(earthAnchor, index)
     }
 
     // Compose the virtual scene with the background.
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
   }
 
-  var earthAnchor: Anchor? = null
+  var earthAnchors: Array<Anchor> = emptyArray()
 
-  fun onMapClick(latLng: LatLng) {
+  fun addObjectAnchor(gpsLocation: GpsLocation, index: Int) {
    // Step 1.2.: place an anchor at the given position.
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
       return
     }
-    earthAnchor?.detach()
 
     // Place the earth anchor at the same altitude as that of the camera to make it easier to view.
     val cameraGeospatialPose = earth.cameraGeospatialPose
@@ -202,22 +226,23 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val qy = 0f
     val qz = 0f
     val qw = 1f
-    earthAnchor = earth.createAnchor(latLng.latitude, latLng.longitude, altitude, qx, qy, qz, qw)
+    earthAnchors[index] = earth.createAnchor(gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw)
 
-    activity.view.mapView?.earthMarker?.apply {
-      position = latLng
-      isVisible = true
-    }
+    // TODO:
+//    activity.view.mapView?.earthMarker?.apply {
+//      position = latLng
+//      isVisible = true
+//    }
   }
 
-  private fun SampleRender.renderObjectAtAnchor(anchor: Anchor) {
+  private fun SampleRender.renderObjectAtAnchor(anchor: Anchor, index: Int) {
     // Get the current pose of the Anchor in world space. The Anchor pose is updated
     // during calls to session.update() as ARCore refines its estimate of the world.
-    anchor.pose.toMatrix(modelMatrix, 0)
+    anchor.pose.toMatrix(modelMatrixes[index], 0)
 
     // Calculate model/view/projection matrices
-    Matrix.multiplyMM(modelViewMatrix, 0, viewMatrix, 0, modelMatrix, 0)
-    Matrix.multiplyMM(modelViewProjectionMatrix, 0, projectionMatrix, 0, modelViewMatrix, 0)
+    Matrix.multiplyMM(modelViewMatrixes[index], 0, viewMatrix, 0, modelMatrixes[index], 0)
+    Matrix.multiplyMM(modelViewProjectionMatrix, 0, projectionMatrix, 0, modelViewMatrixes[index], 0)
 
     // Update shader properties and draw
     virtualObjectShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix)
