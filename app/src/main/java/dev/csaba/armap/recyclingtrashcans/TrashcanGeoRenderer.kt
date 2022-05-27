@@ -15,7 +15,6 @@
  */
 package dev.csaba.armap.recyclingtrashcans
 
-import android.R
 import android.opengl.Matrix
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -175,8 +174,9 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
         earthAnchor.detach()
       }
 
+      val shouldCreateMarkers = activity.view.mapView?.earthMarkers?.isEmpty()
       for ((index, gpsLocation) in gpsLocations.withIndex()) {
-        addObjectAnchor(gpsLocation, index)
+        addObjectAnchor(gpsLocation, index, shouldCreateMarkers != null && shouldCreateMarkers)
       }
     }
 
@@ -211,16 +211,13 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
   var earthAnchors: Array<Anchor> = emptyArray()
 
-  fun addObjectAnchor(gpsLocation: GpsLocation, index: Int) {
+  fun addObjectAnchor(gpsLocation: GpsLocation, index: Int, shouldCreateMarker: Boolean) {
    // Step 1.2.: place an anchor at the given position.
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
       return
     }
 
-    // Place the earth anchor at the same altitude as that of the camera to make it easier to view.
-    val cameraGeospatialPose = earth.cameraGeospatialPose
-    val altitude = cameraGeospatialPose.altitude - 1
     // The rotation quaternion of the anchor in EUS coordinates.
     val qx = 0f
     val qy = 0f
@@ -228,11 +225,10 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val qw = 1f
     earthAnchors[index] = earth.createAnchor(gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw)
 
-    // TODO:
-//    activity.view.mapView?.earthMarker?.apply {
-//      position = latLng
-//      isVisible = true
-//    }
+    if (shouldCreateMarker && activity.view.mapView != null) {
+      val mapView = activity.view.mapView
+      mapView?.earthMarkers?.add(mapView.createMarker(mapView.EARTH_MARKER_COLOR, gpsLocation.lat, gpsLocation.lon, true))
+    }
   }
 
   private fun SampleRender.renderObjectAtAnchor(anchor: Anchor, index: Int) {

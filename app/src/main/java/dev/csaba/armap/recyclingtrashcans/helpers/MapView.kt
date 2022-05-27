@@ -34,14 +34,13 @@ import dev.csaba.armap.recyclingtrashcans.R
 
 class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
   private val CAMERA_MARKER_COLOR: Int = Color.argb(255, 255, 0, 0)
-  private val EARTH_MARKER_COLOR: Int = Color.argb(255, 0, 200, 0)
+  val EARTH_MARKER_COLOR: Int = Color.argb(255, 0, 200, 0)
 
   var setInitialCameraPosition = false
   val cameraMarker = createMarker(CAMERA_MARKER_COLOR)
   var cameraIdle = true
 
-  // TODO: make it a list
-  val earthMarker = createMarker(EARTH_MARKER_COLOR)
+  var earthMarkers: MutableList<Marker> = emptyList<Marker>().toMutableList()
 
   init {
     googleMap.uiSettings.apply {
@@ -86,15 +85,18 @@ class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
   }
 
   /** Creates and adds a 2D anchor marker on the 2D map view.  */
-  private fun createMarker(
+  fun createMarker(
     color: Int,
+    lat: Double = 0.0,
+    lon: Double = 0.0,
+    visible: Boolean = false
   ): Marker {
     val markersOptions = MarkerOptions()
-      .position(LatLng(0.0,0.0))
+      .position(LatLng(lat,lon))
       .draggable(false)
       .anchor(0.5f, 0.5f)
       .flat(true)
-      .visible(false)
+      .visible(visible)
       .icon(BitmapDescriptorFactory.fromBitmap(createColoredMarkerBitmap(color)))
     return googleMap.addMarker(markersOptions)!!
   }
