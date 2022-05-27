@@ -28,7 +28,6 @@ import dev.csaba.armap.common.samplerender.Framebuffer
 import dev.csaba.armap.common.samplerender.Mesh
 import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
-import dev.csaba.armap.common.samplerender.Texture
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import java.io.IOException
@@ -51,7 +50,6 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
   // Virtual object (ARCore pawn)
   lateinit var virtualObjectMesh: Mesh
   lateinit var virtualObjectShader: Shader
-  lateinit var virtualObjectTexture: Texture
 
   // Temporary matrix allocated here to reduce number of allocations for each frame.
   val modelMatrix = FloatArray(16)
@@ -179,7 +177,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
     // Draw the placed anchor, if it exists.
     earthAnchor?.let {
-      render.renderCompassAtAnchor(it)
+      render.renderObjectAtAnchor(it)
     }
 
     // Compose the virtual scene with the background.
@@ -212,7 +210,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     }
   }
 
-  private fun SampleRender.renderCompassAtAnchor(anchor: Anchor) {
+  private fun SampleRender.renderObjectAtAnchor(anchor: Anchor) {
     // Get the current pose of the Anchor in world space. The Anchor pose is updated
     // during calls to session.update() as ARCore refines its estimate of the world.
     anchor.pose.toMatrix(modelMatrix, 0)
