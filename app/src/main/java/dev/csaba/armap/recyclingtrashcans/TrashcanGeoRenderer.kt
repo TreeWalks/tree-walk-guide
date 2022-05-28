@@ -175,8 +175,8 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       }
 
       val shouldCreateMarkers = activity.view.mapView?.earthMarkers?.isEmpty()
-      for ((index, gpsLocation) in gpsLocations.withIndex()) {
-        addObjectAnchor(gpsLocation, index, shouldCreateMarkers != null && shouldCreateMarkers)
+      for (gpsLocation in gpsLocations) {
+        addObjectAnchor(gpsLocation, shouldCreateMarkers != null && shouldCreateMarkers)
       }
     }
 
@@ -209,9 +209,9 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
   }
 
-  var earthAnchors: Array<Anchor> = emptyArray()
+  var earthAnchors: MutableList<Anchor> = emptyList<Anchor>().toMutableList()
 
-  fun addObjectAnchor(gpsLocation: GpsLocation, index: Int, shouldCreateMarker: Boolean) {
+  fun addObjectAnchor(gpsLocation: GpsLocation, shouldCreateMarker: Boolean) {
    // Step 1.2.: place an anchor at the given position.
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
@@ -223,7 +223,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val qy = 0f
     val qz = 0f
     val qw = 1f
-    earthAnchors[index] = earth.createAnchor(gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw)
+    earthAnchors.add(earth.createAnchor(gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw))
 
     if (shouldCreateMarker && activity.view.mapView != null) {
       val mapView = activity.view.mapView
