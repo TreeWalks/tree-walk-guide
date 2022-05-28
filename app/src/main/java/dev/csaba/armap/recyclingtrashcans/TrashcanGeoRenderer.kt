@@ -190,6 +190,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
         longitude = cameraGeospatialPose.longitude,
         heading = cameraGeospatialPose.heading
       )
+      activity.view.updateStatusText(earth, cameraGeospatialPose)
     }
 
     // Draw the placed anchors, if they exist.
