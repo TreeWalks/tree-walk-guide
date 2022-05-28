@@ -29,7 +29,7 @@ import dev.csaba.armap.recyclingtrashcans.R
 import dev.csaba.armap.common.helpers.SnackbarHelper
 
 /** Contains UI elements for Trashcan Geo. */
-class TrahscanGeoView(val activity: TrashcanGeoActivity) : DefaultLifecycleObserver {
+class TrashcanGeoView(val activity: TrashcanGeoActivity) : DefaultLifecycleObserver {
   val root = View.inflate(activity, R.layout.activity_main, null)
   val surfaceView = root.findViewById<GLSurfaceView>(R.id.surfaceview)
 

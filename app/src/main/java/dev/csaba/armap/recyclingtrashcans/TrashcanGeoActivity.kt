@@ -23,7 +23,7 @@ import com.google.ar.core.Config
 import com.google.ar.core.Session
 import dev.csaba.armap.recyclingtrashcans.helpers.ARCoreSessionLifecycleHelper
 import dev.csaba.armap.recyclingtrashcans.helpers.GeoPermissionsHelper
-import dev.csaba.armap.recyclingtrashcans.helpers.TrahscanGeoView
+import dev.csaba.armap.recyclingtrashcans.helpers.TrashcanGeoView
 import dev.csaba.armap.common.helpers.FullScreenHelper
 import dev.csaba.armap.common.samplerender.SampleRender
 import com.google.ar.core.exceptions.CameraNotAvailableException
@@ -38,7 +38,7 @@ class TrashcanGeoActivity : AppCompatActivity() {
   }
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
-  lateinit var view: TrahscanGeoView
+  lateinit var view: TrashcanGeoView
   lateinit var renderer: TrashcanGeoRenderer
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,7 +73,7 @@ class TrashcanGeoActivity : AppCompatActivity() {
     lifecycle.addObserver(renderer)
 
     // Set up Trashcan AR UI.
-    view = TrahscanGeoView(this)
+    view = TrashcanGeoView(this)
     lifecycle.addObserver(view)
     setContentView(view.root)
 
