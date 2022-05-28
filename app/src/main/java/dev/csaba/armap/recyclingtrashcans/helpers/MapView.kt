@@ -87,16 +87,13 @@ class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
   /** Creates and adds a 2D anchor marker on the 2D map view.  */
   fun createMarker(
     color: Int,
-    lat: Double = 0.0,
-    lon: Double = 0.0,
-    visible: Boolean = false
   ): Marker {
     val markersOptions = MarkerOptions()
-      .position(LatLng(lat,lon))
+      .position(LatLng(0.0, 0.0))
       .draggable(false)
       .anchor(0.5f, 0.5f)
       .flat(true)
-      .visible(visible)
+      .visible(false)
       .icon(BitmapDescriptorFactory.fromBitmap(createColoredMarkerBitmap(color)))
     return googleMap.addMarker(markersOptions)!!
   }

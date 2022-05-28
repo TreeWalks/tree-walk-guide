@@ -19,6 +19,7 @@ import android.opengl.Matrix
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Anchor
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.CameraNotAvailableException
@@ -94,6 +95,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       backgroundRenderer.setUseOcclusion(render, false)
 
       val locations: Array<String> = activity.resources.getStringArray(R.array.locations)
+      // val mapView = activity.view.mapView
       for (location in locations) {
         val locationParts = location.split(",")
         gpsLocations.add(
@@ -105,6 +107,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
         )
         modelMatrixes.add(FloatArray(16))
         modelViewMatrixes.add(FloatArray(16))
+        // mapView?.earthMarkers?.add(mapView.createMarker(mapView.EARTH_MARKER_COLOR))
       }
     } catch (e: IOException) {
       Log.e(TAG, "Failed to read a required asset file", e)
@@ -167,17 +170,6 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     // If not tracking, don't draw 3D objects.
     if (camera.trackingState == TrackingState.PAUSED) {
       return
-    } else if (camera.trackingState == TrackingState.TRACKING &&
-      earthAnchors.isEmpty() && gpsLocations.isNotEmpty())
-    {
-      for (earthAnchor in earthAnchors) {
-        earthAnchor.detach()
-      }
-
-      val shouldCreateMarkers = activity.view.mapView?.earthMarkers?.isEmpty()
-      for (gpsLocation in gpsLocations) {
-        addObjectAnchor(gpsLocation, shouldCreateMarkers != null && shouldCreateMarkers)
-      }
     }
 
     // Get projection matrix.
@@ -200,7 +192,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       )
     }
 
-    // Draw the placed anchor, if it exists.
+    // Draw the placed anchors, if they exist.
     for ((index, earthAnchor) in earthAnchors.withIndex()) {
       render.renderObjectAtAnchor(earthAnchor, index)
     }
@@ -211,11 +203,15 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
   var earthAnchors: MutableList<Anchor> = emptyList<Anchor>().toMutableList()
 
-  fun addObjectAnchor(gpsLocation: GpsLocation, shouldCreateMarker: Boolean) {
-   // Step 1.2.: place an anchor at the given position.
+  fun onMapClick(latLng: LatLng) {
+    // Step 1.2.: place an anchor at the given position.
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
       return
+    }
+
+    for (earthAnchor in earthAnchors) {
+      earthAnchor.detach()
     }
 
     // The rotation quaternion of the anchor in EUS coordinates.
@@ -223,11 +219,24 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val qy = 0f
     val qz = 0f
     val qw = 1f
-    earthAnchors.add(earth.createAnchor(gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw))
 
-    if (shouldCreateMarker && activity.view.mapView != null) {
-      val mapView = activity.view.mapView
-      mapView?.earthMarkers?.add(mapView.createMarker(mapView.EARTH_MARKER_COLOR, gpsLocation.lat, gpsLocation.lon, true))
+    val shouldAddAnchor = earthAnchors.isEmpty()
+    val mapView = activity.view.mapView
+    val shouldAddMarker = mapView != null && mapView.earthMarkers.isEmpty()
+    for ((index, gpsLocation) in gpsLocations.withIndex()) {
+      if (shouldAddAnchor) {
+        earthAnchors.add(earth.createAnchor(
+          gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw))
+      }
+
+      if (shouldAddMarker) {
+        mapView?.earthMarkers?.add(mapView.createMarker(mapView.EARTH_MARKER_COLOR))
+      }
+
+      mapView?.earthMarkers?.get(index)?.apply {
+        position = LatLng(gpsLocation.lat, gpsLocation.lon)
+        isVisible = true
+      }
     }
   }
 
