@@ -57,7 +57,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
   var gpsLocations: MutableList<GpsLocation> = emptyList<GpsLocation>().toMutableList()
   var modelMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
   var modelViewMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
-  val modelViewProjectionMatrix = FloatArray(16) // projection x view x model
+  val modelViewProjectionMatrix: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList() // projection x view x model
 
   val session
     get() = activity.arCoreSessionHelper.session
@@ -106,6 +106,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
         )
         modelMatrixes.add(FloatArray(16))
         modelViewMatrixes.add(FloatArray(16))
+        modelViewProjectionMatrix.add(FloatArray(16))
       }
     } catch (e: IOException) {
       Log.e(TAG, "Failed to read a required asset file", e)
@@ -246,10 +247,10 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
     // Calculate model/view/projection matrices
     Matrix.multiplyMM(modelViewMatrixes[index], 0, viewMatrix, 0, modelMatrixes[index], 0)
-    Matrix.multiplyMM(modelViewProjectionMatrix, 0, projectionMatrix, 0, modelViewMatrixes[index], 0)
+    Matrix.multiplyMM(modelViewProjectionMatrix[index], 0, projectionMatrix, 0, modelViewMatrixes[index], 0)
 
     // Update shader properties and draw
-    virtualObjectShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix)
+    virtualObjectShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix[index])
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
   }
 
