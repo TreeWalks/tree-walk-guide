@@ -21,7 +21,6 @@ import android.widget.TextView
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Earth
 import com.google.ar.core.GeospatialPose
 import dev.csaba.armap.recyclingtrashcans.TrashcanGeoActivity
@@ -40,10 +39,8 @@ class TrashcanGeoView(val activity: TrashcanGeoActivity) : DefaultLifecycleObser
 
   var mapView: MapView? = null
   val mapTouchWrapper = root.findViewById<MapTouchWrapper>(R.id.map_wrapper).apply {
-    setup { screenLocation ->
-      val latLng: LatLng =
-        mapView?.googleMap?.projection?.fromScreenLocation(screenLocation) ?: return@setup
-      activity.renderer.onMapClick(latLng)
+    setup {
+      activity.renderer.onMapClick()
     }
   }
   val mapFragment =

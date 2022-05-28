@@ -19,7 +19,6 @@ import android.opengl.Matrix
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Anchor
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.CameraNotAvailableException
@@ -38,10 +37,10 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
   SampleRender.Renderer, DefaultLifecycleObserver {
   //<editor-fold desc="ARCore initialization" defaultstate="collapsed">
   companion object {
-    val TAG = "TrashcanGeoRenderer"
+    const val TAG = "TrashcanGeoRenderer"
 
-    private val Z_NEAR = 0.1f
-    private val Z_FAR = 1000f
+    private const val Z_NEAR = 0.1f
+    private const val Z_FAR = 1000f
   }
 
   lateinit var backgroundRenderer: BackgroundRenderer
@@ -107,7 +106,6 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
         )
         modelMatrixes.add(FloatArray(16))
         modelViewMatrixes.add(FloatArray(16))
-        // mapView?.earthMarkers?.add(mapView.createMarker(mapView.EARTH_MARKER_COLOR))
       }
     } catch (e: IOException) {
       Log.e(TAG, "Failed to read a required asset file", e)
@@ -204,7 +202,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
   var earthAnchors: MutableList<Anchor> = emptyList<Anchor>().toMutableList()
 
-  fun onMapClick(latLng: LatLng) {
+  fun onMapClick() {
     // Step 1.2.: place an anchor at the given position.
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
@@ -224,19 +222,19 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val shouldAddAnchor = earthAnchors.isEmpty()
     val mapView = activity.view.mapView
     val shouldAddMarker = mapView != null && mapView.earthMarkers.isEmpty()
-    for ((index, gpsLocation) in gpsLocations.withIndex()) {
+    for (gpsLocation in gpsLocations) {
       if (shouldAddAnchor) {
         earthAnchors.add(earth.createAnchor(
           gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw))
       }
 
       if (shouldAddMarker) {
-        mapView?.earthMarkers?.add(mapView.createMarker(mapView.EARTH_MARKER_COLOR))
-      }
-
-      mapView?.earthMarkers?.get(index)?.apply {
-        position = LatLng(gpsLocation.lat, gpsLocation.lon)
-        isVisible = true
+        mapView?.earthMarkers?.add(mapView.createMarker(
+          mapView.EARTH_MARKER_COLOR,
+          gpsLocation.lat,
+          gpsLocation.lon,
+          true
+        ))
       }
     }
   }
