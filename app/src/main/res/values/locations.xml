@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string-array name="locations">
-      <item>36.862358,-119.793572,109</item> <!-- entrance 1 -->
-      <item>36.862463,-119.793611,109</item> <!-- exit -->
-      <item>36.862909,-119.793780,107</item> <!-- entrance 2 -->
-      <item>36.862490,-119.793228,109</item> <!-- office -->
-      <item>36.862388,-119.793080,109</item> <!-- fitness -->
-      <item>36.862404,-119.793008,109</item> <!-- pool -->
-      <item>36.861838,-119.793128,108</item> <!-- trashcan -->
-      <item>36.861642,-119.793181,108</item> <!-- mailboxes -->
-
-<!--      <item>36.813174,-119.7459602,102</item>
-      <item>36.813985,-119.7458572,102</item>
-      <item>36.813988,-119.7456992,102</item>
-      <item>36.814453,-119.7450392,102</item>
-      <item>36.814397,-119.7448532,102</item>
-      <item>36.813846,-119.7446312,102</item>
-      <item>36.812859,-119.7444682,102</item>
-      <item>36.813215,-119.7446662,102</item>
-      <item>36.81436,-119.7432092,103</item>
-      <item>36.814759,-119.7440532,103</item>
-      <item>36.814625,-119.7442972,103</item>
-      <item>36.814932,-119.7444502,103</item>
-      <item>36.814353,-119.7444592,103</item>-->
+    <item>36.813174,-119.7454102,103</item> <!-- Satellite Student Union South -->
+    <item>36.813985,-119.7453072,103</item> <!-- Satellite Student Union North 2 -->
+    <item>36.813988,-119.7451492,103</item> <!-- Satellite Student Union North 1 -->
+    <item>36.814453,-119.7444892,104</item> <!-- SW of Downing Planetarium -->
+    <item>36.814397,-119.7443032,104</item> <!-- SE of Downing Planetarium -->
+    <item>36.813846,-119.7440812,103</item> <!-- North of Science I -->
+    <item>36.812859,-119.7439182,104</item> <!-- Northwest of Peters Business -->
+    <item>36.813215,-119.7441162,103</item> <!-- South of Science I -->
+    <item>36.81436,-119.7426592,104</item> <!-- Science II towards P5/P6 -->
+    <item>36.814759,-119.7435032,104</item> <!-- Science II Garden 2 -->
+    <item>36.814625,-119.7437472,104</item> <!-- Science II Garden 1 -->
+    <item>36.814932,-119.7439002,104</item> <!-- Science II West -->
+    <item>36.814353,-119.7439092,104</item> <!-- Science II South -->
+  </string-array>
+  <string-array name="test_locations">
+    <item>36.862358,-119.793572,108</item> <!-- entrance 1 -->
+    <item>36.862463,-119.793611,108</item> <!-- exit -->
+    <item>36.862909,-119.793780,107</item> <!-- entrance 2 -->
+    <item>36.862490,-119.793228,107</item> <!-- office -->
+    <item>36.862388,-119.793080,108</item> <!-- fitness -->
+    <item>36.862404,-119.793008,108</item> <!-- pool -->
+    <item>36.861838,-119.793128,108</item> <!-- trashcan -->
+    <item>36.861642,-119.793181,108</item> <!-- mailboxes -->
   </string-array>
 </resources>
