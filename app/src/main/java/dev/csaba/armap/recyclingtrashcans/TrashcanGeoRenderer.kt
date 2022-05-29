@@ -226,7 +226,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     for (gpsLocation in gpsLocations) {
       if (shouldAddAnchor) {
         earthAnchors.add(earth.createAnchor(
-          gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw))
+          gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation + 0.5, qx, qy, qz, qw))
       }
 
       if (shouldAddMarker) {
