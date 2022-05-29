@@ -225,12 +225,23 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val qw = 1f
 
     val shouldAddAnchor = earthAnchors.isEmpty()
+    var altitudeCorrection = 0.5
+    if (shouldAddAnchor) {
+      val cameraPose = earth.cameraGeospatialPose
+      val closestLocation = gpsLocations.minWithOrNull(Comparator.comparingDouble {
+        haversineInKm(it.lat, it.lon, cameraPose.latitude, cameraPose.longitude)
+      })
+      if (closestLocation != null) {
+        altitudeCorrection += cameraPose.altitude - closestLocation.elevation
+      }
+    }
+
     val mapView = activity.view.mapView
     val shouldAddMarker = mapView != null && mapView.earthMarkers.isEmpty()
     for (gpsLocation in gpsLocations) {
       if (shouldAddAnchor) {
         earthAnchors.add(earth.createAnchor(
-          gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation + 0.5, qx, qy, qz, qw))
+          gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation + altitudeCorrection, qx, qy, qz, qw))
       }
 
       if (shouldAddMarker) {
