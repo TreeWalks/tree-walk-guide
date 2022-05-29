@@ -90,6 +90,7 @@ class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
     lat: Double = 0.0,
     lon: Double = 0.0,
     visible: Boolean = false,
+    iconId: Int = R.drawable.ic_navigation_white_48dp,
   ): Marker {
     val markersOptions = MarkerOptions()
       .position(LatLng(lat, lon))
@@ -97,15 +98,14 @@ class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
       .anchor(0.5f, 0.5f)
       .flat(true)
       .visible(visible)
-      .icon(BitmapDescriptorFactory.fromBitmap(createColoredMarkerBitmap(color)))
+      .icon(BitmapDescriptorFactory.fromBitmap(createColoredMarkerBitmap(color, iconId)))
     return googleMap.addMarker(markersOptions)!!
   }
 
-  private fun createColoredMarkerBitmap(@ColorInt color: Int): Bitmap {
+  private fun createColoredMarkerBitmap(@ColorInt color: Int, iconId: Int): Bitmap {
     val opt = BitmapFactory.Options()
     opt.inMutable = true
-    val navigationIcon =
-      BitmapFactory.decodeResource(activity.resources, R.drawable.ic_navigation_white_48dp, opt)
+    val navigationIcon = BitmapFactory.decodeResource(activity.resources, iconId, opt)
     val p = Paint()
     p.colorFilter = LightingColorFilter(color,  /* add= */1)
     val canvas = Canvas(navigationIcon)

@@ -234,7 +234,8 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
           mapView.EARTH_MARKER_COLOR,
           gpsLocation.lat,
           gpsLocation.lon,
-          true
+          true,
+          R.drawable.ic_marker_white_48dp,
         ))
       }
     }
