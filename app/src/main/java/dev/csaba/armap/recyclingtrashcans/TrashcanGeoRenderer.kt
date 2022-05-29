@@ -30,6 +30,7 @@ import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
 import java.io.IOException
+import kotlin.math.*
 
 data class GpsLocation(val lat: Double, val lon: Double, val elevation: Double)
 
@@ -41,6 +42,9 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
     private const val Z_NEAR = 0.1f
     private const val Z_FAR = 1000f
+
+    private const val MEAN_EARTH_RADIUS = 6371.008
+    private const val D2R = Math.PI / 180.0
   }
 
   lateinit var backgroundRenderer: BackgroundRenderer
@@ -257,4 +261,16 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
   private fun showError(errorMessage: String) =
     activity.view.snackbarHelper.showError(activity, errorMessage)
+
+  private fun haversineInKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+    // https://stackoverflow.com/a/61990886/292502
+    // Haversine to decide which locations sets to populate
+    val lonDiff = (lon2 - lon1) * D2R
+    val latDiff = (lat2 - lat1) * D2R
+    val latSin = sin(latDiff / 2.0)
+    val lonSin = sin(lonDiff / 2.0)
+    val a = latSin * latSin + (cos(lat1 * D2R) * cos(lat2 * D2R) * lonSin * lonSin)
+    val c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a))
+    return MEAN_EARTH_RADIUS * c
+  }
 }
