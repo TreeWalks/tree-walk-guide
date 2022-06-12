@@ -232,6 +232,12 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
         haversineInKm(it.lat, it.lon, cameraPose.latitude, cameraPose.longitude)
       })
       if (closestLocation != null) {
+        val closestDistance = haversineInKm(closestLocation.lat, closestLocation.lon, cameraPose.latitude, cameraPose.longitude)
+        if (closestDistance > 0.3) {
+          showMessage("Please tap again when you got closer to the campus's NorthEast part")
+          return
+        }
+
         altitudeCorrection += cameraPose.altitude - closestLocation.elevation
       }
     }
@@ -272,6 +278,9 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
   private fun showError(errorMessage: String) =
     activity.view.snackbarHelper.showError(activity, errorMessage)
+
+  private fun showMessage(message: String) =
+    activity.view.snackbarHelper.showMessage(activity, message)
 
   private fun haversineInKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
     // https://stackoverflow.com/a/61990886/292502
