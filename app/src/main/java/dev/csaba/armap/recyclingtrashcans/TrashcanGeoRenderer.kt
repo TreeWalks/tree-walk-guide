@@ -97,7 +97,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       backgroundRenderer.setUseDepthVisualization(render, false)
       backgroundRenderer.setUseOcclusion(render, false)
 
-      val locations: Array<String> = activity.resources.getStringArray(R.array.test_locations)
+      val locations: Array<String> = activity.resources.getStringArray(R.array.locations)
       // val mapView = activity.view.mapView
       for (location in locations) {
         val locationParts = location.split(",")
