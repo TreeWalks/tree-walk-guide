@@ -225,7 +225,6 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val qw = 1f
 
     val shouldAddAnchor = earthAnchors.isEmpty()
-    var altitudeCorrection = 0.5
     if (shouldAddAnchor) {
       val cameraPose = earth.cameraGeospatialPose
       val closestLocation = gpsLocations.minWithOrNull(Comparator.comparingDouble {
@@ -237,8 +236,6 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
           showMessage("Please tap again when you got closer to the campus's NorthEast part")
           return
         }
-
-        altitudeCorrection += cameraPose.altitude - closestLocation.elevation
       }
     }
 
@@ -247,7 +244,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     for (gpsLocation in gpsLocations) {
       if (shouldAddAnchor) {
         earthAnchors.add(earth.createAnchor(
-          gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation + altitudeCorrection, qx, qy, qz, qw))
+          gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw))
       }
 
       if (shouldAddMarker) {
