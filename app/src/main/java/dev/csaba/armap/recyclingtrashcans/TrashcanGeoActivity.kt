@@ -87,6 +87,9 @@ class TrashcanGeoActivity : AppCompatActivity() {
       session.config.apply {
         // Enable Geospatial Mode.
         geospatialMode = Config.GeospatialMode.ENABLED
+        // This finding mode is probably the default
+        // https://developers.google.com/ar/develop/java/geospatial/terrain-anchors
+        planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
       }
     )
   }
