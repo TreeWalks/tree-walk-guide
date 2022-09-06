@@ -97,7 +97,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       backgroundRenderer.setUseDepthVisualization(render, false)
       backgroundRenderer.setUseOcclusion(render, false)
 
-      val locations: Array<String> = activity.resources.getStringArray(R.array.locations)
+      val locations: Array<String> = activity.resources.getStringArray(R.array.test_locations)
       // val mapView = activity.view.mapView
       for (location in locations) {
         val locationParts = location.split(",")
@@ -224,8 +224,8 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val qz = 0f
     val qw = 1f
 
-    val shouldAddAnchor = earthAnchors.isEmpty()
-    if (shouldAddAnchor) {
+    val shouldAddAnchors = earthAnchors.isEmpty()
+    if (shouldAddAnchors) {
       val cameraPose = earth.cameraGeospatialPose
       val closestLocation = gpsLocations.minWithOrNull(Comparator.comparingDouble {
         haversineInKm(it.lat, it.lon, cameraPose.latitude, cameraPose.longitude)
@@ -243,7 +243,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val mapView = activity.view.mapView
     val shouldAddMarker = mapView != null && mapView.earthMarkers.isEmpty()
     for (gpsLocation in gpsLocations) {
-      if (shouldAddAnchor) {
+      if (shouldAddAnchors) {
         earthAnchors.add(earth.resolveAnchorOnTerrain(
           gpsLocation.lat, gpsLocation.lon, altitudeAboveTerrain, qx, qy, qz, qw))
       }
