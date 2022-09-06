@@ -239,12 +239,13 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       }
     }
 
+    val altitudeAboveTerrain = 0.5  // meters
     val mapView = activity.view.mapView
     val shouldAddMarker = mapView != null && mapView.earthMarkers.isEmpty()
     for (gpsLocation in gpsLocations) {
       if (shouldAddAnchor) {
-        earthAnchors.add(earth.createAnchor(
-          gpsLocation.lat, gpsLocation.lon, gpsLocation.elevation, qx, qy, qz, qw))
+        earthAnchors.add(earth.resolveAnchorOnTerrain(
+          gpsLocation.lat, gpsLocation.lon, altitudeAboveTerrain, qx, qy, qz, qw))
       }
 
       if (shouldAddMarker) {
@@ -260,6 +261,14 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
   }
 
   private fun SampleRender.renderObjectAtAnchor(anchor: Anchor, index: Int) {
+    if (anchor.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS) {
+      return
+    }
+
+    if (anchor.trackingState != TrackingState.TRACKING) {
+      return
+    }
+
     // Get the current pose of the Anchor in world space. The Anchor pose is updated
     // during calls to session.update() as ARCore refines its estimate of the world.
     anchor.pose.toMatrix(modelMatrixes[index], 0)
