@@ -53,12 +53,12 @@ class TrashcanGeoActivity : AppCompatActivity() {
         val message =
           when (exception) {
             is UnavailableUserDeclinedInstallationException ->
-              "Please install Google Play Services for AR"
-            is UnavailableApkTooOldException -> "Please update ARCore"
-            is UnavailableSdkTooOldException -> "Please update this app"
-            is UnavailableDeviceNotCompatibleException -> "This device does not support AR"
-            is CameraNotAvailableException -> "Camera not available. Try restarting the app."
-            else -> "Failed to create AR session: $exception"
+              resources.getString(R.string.install_google_play)
+            is UnavailableApkTooOldException -> resources.getString(R.string.update_ar_core)
+            is UnavailableSdkTooOldException -> resources.getString(R.string.update_this_app)
+            is UnavailableDeviceNotCompatibleException -> resources.getString(R.string.no_ar_support)
+            is CameraNotAvailableException -> resources.getString(R.string.camera_not_available)
+            else -> resources.getString(R.string.ar_core_exception, exception.toString())
           }
         Log.e(TAG, "ARCore threw an exception", exception)
         view.snackbarHelper.showError(this, message)
@@ -71,6 +71,7 @@ class TrashcanGeoActivity : AppCompatActivity() {
     // Set up the Trashcan AR renderer.
     renderer = TrashcanGeoRenderer(this)
     lifecycle.addObserver(renderer)
+    // TODO: download locations
 
     // Set up Trashcan AR UI.
     view = TrashcanGeoView(this)
@@ -102,7 +103,7 @@ class TrashcanGeoActivity : AppCompatActivity() {
     super.onRequestPermissionsResult(requestCode, permissions, results)
     if (!GeoPermissionsHelper.hasGeoPermissions(this)) {
       // Use toast instead of snackbar here since the activity will exit.
-      Toast.makeText(this, "Camera and location permissions are needed to run this application", Toast.LENGTH_LONG)
+      Toast.makeText(this, resources.getString(R.string.permissions_needed), Toast.LENGTH_LONG)
         .show()
       if (!GeoPermissionsHelper.shouldShowRequestPermissionRationale(this)) {
         // Permission denied with checking "Do not ask again".

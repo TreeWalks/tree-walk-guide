@@ -29,8 +29,8 @@ import dev.csaba.armap.common.helpers.SnackbarHelper
 
 /** Contains UI elements for Trashcan Geo. */
 class TrashcanGeoView(val activity: TrashcanGeoActivity) : DefaultLifecycleObserver {
-  val root = View.inflate(activity, R.layout.activity_main, null)
-  val surfaceView = root.findViewById<GLSurfaceView>(R.id.surfaceview)
+  val root: View = View.inflate(activity, R.layout.activity_main, null)
+  val surfaceView: GLSurfaceView = root.findViewById(R.id.surfaceview)
 
   val session
     get() = activity.arCoreSessionHelper.session
@@ -38,7 +38,7 @@ class TrashcanGeoView(val activity: TrashcanGeoActivity) : DefaultLifecycleObser
   val snackbarHelper = SnackbarHelper()
 
   var mapView: MapView? = null
-  val mapTouchWrapper = root.findViewById<MapTouchWrapper>(R.id.map_wrapper).apply {
+  val mapTouchWrapper: MapTouchWrapper = root.findViewById<MapTouchWrapper>(R.id.map_wrapper).apply {
     setup {
       activity.renderer.onMapClick()
     }
@@ -48,22 +48,32 @@ class TrashcanGeoView(val activity: TrashcanGeoActivity) : DefaultLifecycleObser
       it.getMapAsync { googleMap -> mapView = MapView(activity, googleMap) }
     }
 
-  val statusText = root.findViewById<TextView>(R.id.statusText)
+  private val statusText: TextView = root.findViewById(R.id.statusText)
   fun updateStatusText(earth: Earth, cameraGeospatialPose: GeospatialPose?) {
     activity.runOnUiThread {
       val poseText = if (cameraGeospatialPose == null) "" else
-        activity.getString(R.string.geospatial_pose,
-                           cameraGeospatialPose.latitude,
-                           cameraGeospatialPose.longitude,
-                           cameraGeospatialPose.horizontalAccuracy,
-                           cameraGeospatialPose.altitude,
-                           cameraGeospatialPose.verticalAccuracy,
-                           cameraGeospatialPose.heading,
-                           cameraGeospatialPose.headingAccuracy)
-      statusText.text = activity.resources.getString(R.string.earth_state,
-                                                     earth.earthState.toString(),
-                                                     earth.trackingState.toString(),
-                                                     poseText)
+      activity.getString(R.string.geospatial_pose,
+                         cameraGeospatialPose.latitude,
+                         cameraGeospatialPose.longitude,
+                         cameraGeospatialPose.horizontalAccuracy,
+                         cameraGeospatialPose.altitude,
+                         cameraGeospatialPose.verticalAccuracy,
+                         cameraGeospatialPose.heading,
+                         cameraGeospatialPose.headingAccuracy
+      )
+      val statusMessage = activity.resources.getString(
+        R.string.earth_state,
+        earth.earthState.toString(),
+        earth.trackingState.toString(),
+        poseText
+      )
+      statusText.text = statusMessage
+    }
+  }
+
+  fun updateStatusTextString(statusMessage: String) {
+    activity.runOnUiThread {
+      statusText.text = statusMessage
     }
   }
 

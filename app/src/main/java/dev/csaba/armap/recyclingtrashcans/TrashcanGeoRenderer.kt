@@ -47,27 +47,27 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     private const val D2R = Math.PI / 180.0
   }
 
-  lateinit var backgroundRenderer: BackgroundRenderer
-  lateinit var virtualSceneFramebuffer: Framebuffer
-  var hasSetTextureNames = false
+  private lateinit var backgroundRenderer: BackgroundRenderer
+  private lateinit var virtualSceneFramebuffer: Framebuffer
+  private var hasSetTextureNames = false
 
   // Virtual object (ARCore pawn)
-  lateinit var virtualObjectMesh: Mesh
-  lateinit var virtualObjectShader: Shader
+  private lateinit var virtualObjectMesh: Mesh
+  private lateinit var virtualObjectShader: Shader
 
   // Temporary matrix allocated here to reduce number of allocations for each frame.
-  val viewMatrix = FloatArray(16)
-  val projectionMatrix = FloatArray(16)
-  var gpsLocations: MutableList<GpsLocation> = emptyList<GpsLocation>().toMutableList()
-  var modelMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
-  var modelViewMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
-  val modelViewProjectionMatrix: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList() // projection x view x model
+  private val viewMatrix = FloatArray(16)
+  private val projectionMatrix = FloatArray(16)
+  private var gpsLocations: MutableList<GpsLocation> = emptyList<GpsLocation>().toMutableList()
+  private var modelMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
+  private var modelViewMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
+  private val modelViewProjectionMatrix: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList() // projection x view x model
 
-  val session
+  private val session
     get() = activity.arCoreSessionHelper.session
 
-  val displayRotationHelper = DisplayRotationHelper(activity)
-  val trackingStateHelper = TrackingStateHelper(activity)
+  private val displayRotationHelper = DisplayRotationHelper(activity)
+  private val trackingStateHelper = TrackingStateHelper(activity)
 
   override fun onResume(owner: LifecycleOwner) {
     displayRotationHelper.onResume()
@@ -172,6 +172,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
     // If not tracking, don't draw 3D objects.
     if (camera.trackingState == TrackingState.PAUSED) {
+      activity.view.updateStatusTextString(activity.resources.getString(R.string.calculating))
       return
     }
 
@@ -193,7 +194,12 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
         longitude = cameraGeospatialPose.longitude,
         heading = cameraGeospatialPose.heading
       )
-      activity.view.updateStatusText(earth, cameraGeospatialPose)
+
+      if (BuildConfig.BUILD_TYPE.equals("debug")) {
+        activity.view.updateStatusText(earth, cameraGeospatialPose)
+      }
+    } else if (!BuildConfig.BUILD_TYPE.equals("debug")) {
+      activity.view.updateStatusTextString(activity.resources.getString(R.string.calculating))
     }
 
     // Draw the placed anchors, if they exist.
@@ -205,12 +211,13 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
   }
 
-  var earthAnchors: MutableList<Anchor> = emptyList<Anchor>().toMutableList()
+  private var earthAnchors: MutableList<Anchor> = emptyList<Anchor>().toMutableList()
 
   fun onMapClick() {
     // Step 1.2.: place an anchor at the given position.
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
+      activity.view.updateStatusTextString(activity.resources.getString(R.string.calculating))
       return
     }
 
@@ -233,7 +240,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       if (closestLocation != null) {
         val closestDistance = haversineInKm(closestLocation.lat, closestLocation.lon, cameraPose.latitude, cameraPose.longitude)
         if (closestDistance > 0.3) {
-          showMessage("Please tap again when you got closer to the campus's NorthEast part")
+          activity.view.updateStatusTextString(activity.resources.getString(R.string.too_far))
           return
         }
       }
