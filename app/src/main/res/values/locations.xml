@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string-array name="locations">
-    <item>36.813174,-119.7454102,102.82</item> <!-- Satellite Student Union South -->
-    <item>36.813985,-119.7453072,102.93</item> <!-- Satellite Student Union North 2 -->
-    <item>36.813988,-119.7451492,102.96</item> <!-- Satellite Student Union North 1 -->
-    <item>36.814453,-119.7444892,103.17</item> <!-- SW of Downing Planetarium -->
-    <item>36.814397,-119.7443032,103.19</item> <!-- SE of Downing Planetarium -->
-    <item>36.813846,-119.7440812,103.17</item> <!-- North of Science I -->
-    <item>36.812859,-119.7439182,103.08</item> <!-- Northwest of Peters Business -->
-    <item>36.813215,-119.7441162,103.07</item> <!-- South of Science I -->
-    <item>36.81436,-119.7426592,103.62</item> <!-- Science II towards P5/P6 -->
-    <item>36.814759,-119.7435032,103.45</item> <!-- Science II Garden 2 -->
-    <item>36.814625,-119.7437472,103.36</item> <!-- Science II Garden 1 -->
-    <item>36.814932,-119.7439002,103.37</item> <!-- Science II West -->
-    <item>36.814353,-119.7439092,103.29</item> <!-- Science II South -->
+  <string-array name="csu_fresno">
+    <item>36.813174,-119.7454102</item> <!-- Satellite Student Union South -->
+    <item>36.813985,-119.7453072</item> <!-- Satellite Student Union North 2 -->
+    <item>36.813988,-119.7451492</item> <!-- Satellite Student Union North 1 -->
+    <item>36.814453,-119.7444892</item> <!-- SW of Downing Planetarium -->
+    <item>36.814397,-119.7443032</item> <!-- SE of Downing Planetarium -->
+    <item>36.813846,-119.7440812</item> <!-- North of Science I -->
+    <item>36.812859,-119.7439182</item> <!-- Northwest of Peters Business -->
+    <item>36.813215,-119.7441162</item> <!-- South of Science I -->
+    <item>36.81436,-119.7426592</item> <!-- Science II towards P5/P6 -->
+    <item>36.814759,-119.7435032</item> <!-- Science II Garden 2 -->
+    <item>36.814625,-119.7437472</item> <!-- Science II Garden 1 -->
+    <item>36.814932,-119.7439002</item> <!-- Science II West -->
+    <item>36.814353,-119.7439092</item> <!-- Science II South -->
   </string-array>
-  <string-array name="test_locations">
-    <item>36.862358,-119.793572,110.75</item> <!-- entrance 1 -->
-    <item>36.862463,-119.793611,110.58</item> <!-- exit -->
-    <item>36.862909,-119.793780,108.29</item> <!-- entrance 2 -->
-    <item>36.862490,-119.793228,110.57</item> <!-- office -->
-    <item>36.862388,-119.793080,110.49</item> <!-- fitness -->
-    <item>36.862404,-119.793008,110.42</item> <!-- pool -->
-    <item>36.861838,-119.793128,110.96</item> <!-- trashcan -->
-    <item>36.861642,-119.793181,110.92</item> <!-- mailboxes -->
+  <string-array name="park_ridge">
+    <item>36.862358,-119.793572</item> <!-- entrance 1 -->
+    <item>36.862463,-119.793611</item> <!-- exit -->
+    <item>36.862909,-119.793780</item> <!-- entrance 2 -->
+    <item>36.862490,-119.793228</item> <!-- office -->
+    <item>36.862388,-119.793080</item> <!-- fitness -->
+    <item>36.862404,-119.793008</item> <!-- pool -->
+    <item>36.861838,-119.793128</item> <!-- trashcan -->
+    <item>36.861642,-119.793181</item> <!-- mailboxes -->
   </string-array>
 </resources>

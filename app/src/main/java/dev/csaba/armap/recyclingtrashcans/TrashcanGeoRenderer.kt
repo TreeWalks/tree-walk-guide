@@ -16,6 +16,7 @@
 package dev.csaba.armap.recyclingtrashcans
 
 import android.opengl.Matrix
+import android.os.CountDownTimer
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -29,10 +30,21 @@ import dev.csaba.armap.common.samplerender.Mesh
 import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
+import java.io.File
+import java.io.FileReader
 import java.io.IOException
 import kotlin.math.*
 
-data class GpsLocation(val lat: Double, val lon: Double, val elevation: Double)
+data class GpsLocation(val lat: Double, val lon: Double)
+
+data class MapArea(
+  val name: String,
+  var center: GpsLocation,
+  val gpsLocations: MutableList<GpsLocation>,
+  val modelMatrixes: MutableList<FloatArray>,
+  val modelViewMatrixes: MutableList<FloatArray>,
+  val modelViewProjectionMatrix: MutableList<FloatArray> // projection x view x model
+)
 
 class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
   SampleRender.Renderer, DefaultLifecycleObserver {
@@ -45,6 +57,9 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
     private const val MEAN_EARTH_RADIUS = 6371.008
     private const val D2R = Math.PI / 180.0
+
+    private const val HOVER_ABOVE_TERRAIN = 0.5  // meters
+    private const val AREA_PROXIMITY_THRESHOLD = 0.3  // kilometers
   }
 
   private lateinit var backgroundRenderer: BackgroundRenderer
@@ -58,10 +73,14 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
   // Temporary matrix allocated here to reduce number of allocations for each frame.
   private val viewMatrix = FloatArray(16)
   private val projectionMatrix = FloatArray(16)
-  private var gpsLocations: MutableList<GpsLocation> = emptyList<GpsLocation>().toMutableList()
-  private var modelMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
-  private var modelViewMatrixes: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList()
-  private val modelViewProjectionMatrix: MutableList<FloatArray> = emptyList<FloatArray>().toMutableList() // projection x view x model
+  private val mapAreas: MutableList<MapArea> = emptyList<MapArea>().toMutableList()
+  private var areaIndex: Int = -1
+  private var loaded = false
+  private var populating = false
+  private val timer = object: CountDownTimer(2000, 1000) {
+    override fun onTick(millisUntilFinished: Long) {}
+    override fun onFinish() { onMapClick() }
+  }
 
   private val session
     get() = activity.arCoreSessionHelper.session
@@ -83,7 +102,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     // This involves reading shaders and 3D model files, so may throw an IOException.
     try {
       backgroundRenderer = BackgroundRenderer(render)
-      virtualSceneFramebuffer = Framebuffer(render, /*width=*/ 1, /*height=*/ 1)
+      virtualSceneFramebuffer = Framebuffer(render, 1, 1)
 
       // Virtual object to render (Geospatial Marker)
       virtualObjectMesh = Mesh.createFromAsset(render, "models/map_pin.obj")
@@ -92,29 +111,15 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
           render,
           "shaders/ar_unlit_object.vert",
           "shaders/ar_unlit_object.frag",
-          /*defines=*/ null)
+          null)
 
       backgroundRenderer.setUseDepthVisualization(render, false)
       backgroundRenderer.setUseOcclusion(render, false)
 
-      val locations: Array<String> = activity.resources.getStringArray(R.array.locations)
-      // val mapView = activity.view.mapView
-      for (location in locations) {
-        val locationParts = location.split(",")
-        gpsLocations.add(
-          GpsLocation(
-            locationParts[0].toDouble(),
-            locationParts[1].toDouble(),
-            locationParts[2].toDouble()
-          )
-        )
-        modelMatrixes.add(FloatArray(16))
-        modelViewMatrixes.add(FloatArray(16))
-        modelViewProjectionMatrix.add(FloatArray(16))
-      }
+      processLocationArray("csu_fresno", activity.resources.getStringArray(R.array.csu_fresno))
+      processLocationArray("park_ridge", activity.resources.getStringArray(R.array.park_ridge))
     } catch (e: IOException) {
       Log.e(TAG, "Failed to read a required asset file", e)
-      showError("Failed to read a required asset file: $e")
     }
   }
 
@@ -150,7 +155,6 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
         session.update()
       } catch (e: CameraNotAvailableException) {
         Log.e(TAG, "Camera not available during onDrawFrame", e)
-        showError("Camera not available. Try restarting the app.")
         return
       }
 
@@ -188,6 +192,11 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     // Step 1.1.: Obtain Geospatial information and display it on the map.
     val earth = session.earth
     if (earth?.trackingState == TrackingState.TRACKING) {
+      if (areaIndex < 0 && !populating) {
+        populating = true
+        timer.start()
+      }
+
       val cameraGeospatialPose = earth.cameraGeospatialPose
       activity.view.mapView?.updateMapPosition(
         latitude = cameraGeospatialPose.latitude,
@@ -211,13 +220,137 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
   }
 
+  private fun processLocationArray(name: String, locations: Array<String>) {
+    val mapArea = MapArea(
+      name,
+      GpsLocation(0.0, 0.0),
+      emptyList<GpsLocation>().toMutableList(),
+      emptyList<FloatArray>().toMutableList(),
+      emptyList<FloatArray>().toMutableList(),
+      emptyList<FloatArray>().toMutableList()
+    )
+
+    var latSum = 0.0
+    var lonSum = 0.0
+    for (location in locations) {
+      val locationParts = location.split(",")
+      val lat = locationParts[0].toDouble()
+      val lon = locationParts[1].toDouble()
+      mapArea.gpsLocations.add(GpsLocation(lat, lon))
+      latSum += lat
+      lonSum += lon
+      mapArea.modelMatrixes.add(FloatArray(16))
+      mapArea.modelViewMatrixes.add(FloatArray(16))
+      mapArea.modelViewProjectionMatrix.add(FloatArray(16))
+    }
+
+    mapArea.center = GpsLocation(latSum / locations.size, lonSum / locations.size)
+
+    var override = -1
+    var found = false
+    for ((i1, mapA) in mapAreas.withIndex()) {
+      if (mapA.name == name) {
+        found = true
+        if (haversineInKm(mapA.center.lat, mapA.center.lon, mapArea.center.lat, mapArea.center.lon) > 1e-7) {
+          override = i1
+        } else {
+          for ((i2, gpsLocation) in mapArea.gpsLocations.withIndex()) {
+            if (haversineInKm(gpsLocation.lat, gpsLocation.lon, mapA.gpsLocations[i2].lat, mapA.gpsLocations[i2].lon) > 1e-7) {
+              override = i1
+              break
+            }
+          }
+        }
+
+        break
+      }
+    }
+
+    if (!found) {
+      mapAreas.add(mapArea)
+    } else if (override >= 0) {
+      mapAreas[override] = mapArea
+    }
+  }
+
+  fun processLocations(locationsFile: File) {
+    if (!locationsFile.exists()) {
+      Log.w(TAG, "Locations file ${locationsFile.path} doesn't exist")
+      loaded = true
+      return
+    }
+
+    val reader = FileReader(locationsFile)
+    val locationsXmlContent = reader.readText()
+    reader.close()
+    val areaMapParts = locationsXmlContent.split("<string-array name=\"")
+    if (areaMapParts.size <= 1) {
+      loaded = true
+      return
+    }
+
+    for (areaMapPart in areaMapParts.subList(1, areaMapParts.size)) {
+      if (areaMapPart.indexOf('"') < 0) {
+        continue
+      }
+
+      val name = areaMapPart.split('"')[0]
+      val areaLocations: MutableList<String> = emptyList<String>().toMutableList()
+      val itemParts = areaMapPart.split("<item>")
+      if (itemParts.size <= 1) {
+        continue
+      }
+
+      for (itemPart in itemParts.subList(1, itemParts.size)) {
+        val itemParts2 = itemPart.split("</item>")
+        if (itemParts2.isNotEmpty() && itemParts2.indexOf(",") >= 0) {
+          areaLocations.add(itemParts2[0])
+        }
+      }
+
+      if (areaLocations.isNotEmpty()) {
+        processLocationArray(name, areaLocations.toTypedArray())
+      }
+    }
+
+    loaded = true
+  }
+
   private var earthAnchors: MutableList<Anchor> = emptyList<Anchor>().toMutableList()
 
   fun onMapClick() {
+    populating = true
+    if (areaIndex >= 0) {
+      populating = false
+      return
+    }
+
     // Step 1.2.: place an anchor at the given position.
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
       activity.view.updateStatusTextString(activity.resources.getString(R.string.calculating))
+      populating = false
+      return
+    }
+
+    val cameraPose = earth.cameraGeospatialPose
+    var areaIndex = -1
+    for ((index, mapArea) in mapAreas.withIndex()) {
+      val closestLocation = mapArea.gpsLocations.minWithOrNull(Comparator.comparingDouble {
+        haversineInKm(it.lat, it.lon, cameraPose.latitude, cameraPose.longitude)
+      })
+      if (closestLocation != null) {
+        val closestDistance = haversineInKm(closestLocation.lat, closestLocation.lon, cameraPose.latitude, cameraPose.longitude)
+        if (closestDistance < AREA_PROXIMITY_THRESHOLD) {
+          areaIndex = index
+          break
+        }
+      }
+    }
+
+    if (areaIndex < 0) {
+      activity.view.updateStatusTextString(activity.resources.getString(R.string.too_far))
+      populating = false
       return
     }
 
@@ -232,27 +365,12 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val qw = 1f
 
     val shouldAddAnchors = earthAnchors.isEmpty()
-    if (shouldAddAnchors) {
-      val cameraPose = earth.cameraGeospatialPose
-      val closestLocation = gpsLocations.minWithOrNull(Comparator.comparingDouble {
-        haversineInKm(it.lat, it.lon, cameraPose.latitude, cameraPose.longitude)
-      })
-      if (closestLocation != null) {
-        val closestDistance = haversineInKm(closestLocation.lat, closestLocation.lon, cameraPose.latitude, cameraPose.longitude)
-        if (closestDistance > 0.3) {
-          activity.view.updateStatusTextString(activity.resources.getString(R.string.too_far))
-          return
-        }
-      }
-    }
-
-    val altitudeAboveTerrain = 0.5  // meters
     val mapView = activity.view.mapView
     val shouldAddMarker = mapView != null && mapView.earthMarkers.isEmpty()
-    for (gpsLocation in gpsLocations) {
+    for (gpsLocation in mapAreas[areaIndex].gpsLocations) {
       if (shouldAddAnchors) {
         earthAnchors.add(earth.resolveAnchorOnTerrain(
-          gpsLocation.lat, gpsLocation.lon, altitudeAboveTerrain, qx, qy, qz, qw))
+          gpsLocation.lat, gpsLocation.lon, HOVER_ABOVE_TERRAIN, qx, qy, qz, qw))
       }
 
       if (shouldAddMarker) {
@@ -267,7 +385,11 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     }
   }
 
-  private fun SampleRender.renderObjectAtAnchor(anchor: Anchor, index: Int) {
+  fun SampleRender.renderObjectAtAnchor(anchor: Anchor, index: Int) {
+    if (areaIndex < 0 || populating) {
+      return
+    }
+
     if (anchor.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS) {
       return
     }
@@ -278,14 +400,14 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
     // Get the current pose of the Anchor in world space. The Anchor pose is updated
     // during calls to session.update() as ARCore refines its estimate of the world.
-    anchor.pose.toMatrix(modelMatrixes[index], 0)
+    anchor.pose.toMatrix(mapAreas[areaIndex].modelMatrixes[index], 0)
 
     // Calculate model/view/projection matrices
-    Matrix.multiplyMM(modelViewMatrixes[index], 0, viewMatrix, 0, modelMatrixes[index], 0)
-    Matrix.multiplyMM(modelViewProjectionMatrix[index], 0, projectionMatrix, 0, modelViewMatrixes[index], 0)
+    Matrix.multiplyMM(mapAreas[areaIndex].modelViewMatrixes[index], 0, viewMatrix, 0, mapAreas[areaIndex].modelMatrixes[index], 0)
+    Matrix.multiplyMM(mapAreas[areaIndex].modelViewProjectionMatrix[index], 0, projectionMatrix, 0, mapAreas[areaIndex].modelViewMatrixes[index], 0)
 
     // Update shader properties and draw
-    virtualObjectShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix[index])
+    virtualObjectShader.setMat4("u_ModelViewProjection", mapAreas[areaIndex].modelViewProjectionMatrix[index])
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
   }
 

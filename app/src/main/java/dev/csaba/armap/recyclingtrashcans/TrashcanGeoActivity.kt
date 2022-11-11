@@ -21,28 +21,49 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.ar.core.Config
 import com.google.ar.core.Session
-import dev.csaba.armap.recyclingtrashcans.helpers.ARCoreSessionLifecycleHelper
-import dev.csaba.armap.recyclingtrashcans.helpers.GeoPermissionsHelper
-import dev.csaba.armap.recyclingtrashcans.helpers.TrashcanGeoView
-import dev.csaba.armap.common.helpers.FullScreenHelper
-import dev.csaba.armap.common.samplerender.SampleRender
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableApkTooOldException
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
+import dev.csaba.armap.recyclingtrashcans.helpers.ARCoreSessionLifecycleHelper
+import dev.csaba.armap.recyclingtrashcans.helpers.GeoPermissionsHelper
+import dev.csaba.armap.recyclingtrashcans.helpers.FileDownloader
+import dev.csaba.armap.recyclingtrashcans.helpers.TrashcanGeoView
+import dev.csaba.armap.common.helpers.FullScreenHelper
+import dev.csaba.armap.common.samplerender.SampleRender
+import io.reactivex.BackpressureStrategy
+import io.reactivex.android.schedulers.AndroidSchedulers.*
+import io.reactivex.disposables.Disposables
+import io.reactivex.plugins.RxJavaPlugins
+import io.reactivex.schedulers.Schedulers
+import java.io.File
+import java.util.concurrent.TimeUnit
+import okhttp3.OkHttpClient
 
 class TrashcanGeoActivity : AppCompatActivity() {
   companion object {
     private const val TAG = "TrashcanGeoActivity"
+    private const val LOCATIONS_FILE_NAME = "locations2.xml"
+    private const val LOCATIONS_URL = "https://recyclingtrashcans.github.io/locations.xml"
   }
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
   lateinit var view: TrashcanGeoView
   lateinit var renderer: TrashcanGeoRenderer
+  val fileDownloader by lazy {
+    FileDownloader(
+      OkHttpClient.Builder().build()
+    )
+  }
+  var disposable = Disposables.disposed()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+
+    RxJavaPlugins.setErrorHandler {
+      Log.e("Error", it.localizedMessage ?: "")
+    }
 
     // Setup ARCore session lifecycle helper and configuration.
     arCoreSessionHelper = ARCoreSessionLifecycleHelper(this)
@@ -71,7 +92,6 @@ class TrashcanGeoActivity : AppCompatActivity() {
     // Set up the Trashcan AR renderer.
     renderer = TrashcanGeoRenderer(this)
     lifecycle.addObserver(renderer)
-    // TODO: download locations
 
     // Set up Trashcan AR UI.
     view = TrashcanGeoView(this)
@@ -80,6 +100,33 @@ class TrashcanGeoActivity : AppCompatActivity() {
 
     // Sets up an example renderer using our TrashcanGeoRenderer.
     SampleRender(view.surfaceView, renderer, assets)
+
+    downloadLocations()
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    disposable.dispose()
+  }
+
+  fun downloadLocations() {
+    var cachedFile = File(cacheDir, LOCATIONS_FILE_NAME)
+
+    disposable = fileDownloader.download(LOCATIONS_URL, cachedFile)
+      .throttleFirst(100, TimeUnit.MILLISECONDS)
+      .toFlowable(BackpressureStrategy.LATEST)
+      .subscribeOn(Schedulers.io())
+      .observeOn(mainThread())
+      .subscribe({
+        Log.i(TAG, "$it% Downloaded")
+      }, {
+        Log.e(TAG, it.localizedMessage, it)
+        cachedFile = File(cacheDir, LOCATIONS_FILE_NAME)
+        renderer.processLocations(cachedFile)
+      }, {
+        Log.i(TAG, "Download Complete")
+        renderer.processLocations(cachedFile)
+      })
   }
 
   // Configure the session, setting the desired options according to your usecase.
