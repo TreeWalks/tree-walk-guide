@@ -50,8 +50,8 @@ data class LocationData(
 
     other as LocationData
 
-    if (!title.equals(other.title)) return false;
-    if (!url.equals(other.url)) return false;
+    if (!title.equals(other.title)) return false
+    if (!url.equals(other.url)) return false
     if (gpsLocation != other.gpsLocation) return false
     if (!modelMatrix.contentEquals(other.modelMatrix)) return false
     if (!modelViewMatrix.contentEquals(other.modelViewMatrix)) return false
