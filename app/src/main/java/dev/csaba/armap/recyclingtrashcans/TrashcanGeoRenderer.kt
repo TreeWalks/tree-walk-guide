@@ -38,6 +38,8 @@ import kotlin.math.*
 data class GpsLocation(val lat: Double, val lon: Double)
 data class LocationData(
   val gpsLocation: GpsLocation,
+  val title: String,
+  val url: String,
   val modelMatrix: FloatArray,
   val modelViewMatrix: FloatArray,
   val modelViewProjectionMatrix: FloatArray // projection x view x model
@@ -48,6 +50,8 @@ data class LocationData(
 
     other as LocationData
 
+    if (!title.equals(other.title)) return false;
+    if (!url.equals(other.url)) return false;
     if (gpsLocation != other.gpsLocation) return false
     if (!modelMatrix.contentEquals(other.modelMatrix)) return false
     if (!modelViewMatrix.contentEquals(other.modelViewMatrix)) return false
@@ -58,6 +62,8 @@ data class LocationData(
 
   override fun hashCode(): Int {
     var result = gpsLocation.hashCode()
+    result = 31 * result + title.hashCode()
+    result = 31 * result + url.hashCode()
     result = 31 * result + modelMatrix.contentHashCode()
     result = 31 * result + modelViewMatrix.contentHashCode()
     result = 31 * result + modelViewProjectionMatrix.contentHashCode()
@@ -258,7 +264,18 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       val locationParts = location.split(",")
       val lat = locationParts[0].toDouble()
       val lon = locationParts[1].toDouble()
-      mapArea.locationData.add(LocationData(GpsLocation(lat, lon), FloatArray(16), FloatArray(16), FloatArray(16)))
+      val title = if (locationParts.size > 2) locationParts[2] else ""
+      val url = if (locationParts.size > 3) locationParts[3] else ""
+      mapArea.locationData.add(
+        LocationData(
+          GpsLocation(lat, lon),
+          title,
+          url,
+          FloatArray(16),
+          FloatArray(16),
+          FloatArray(16)
+        )
+      )
       latSum += lat
       lonSum += lon
     }
