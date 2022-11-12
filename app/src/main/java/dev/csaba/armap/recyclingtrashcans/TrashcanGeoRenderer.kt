@@ -136,7 +136,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       virtualSceneFramebuffer = Framebuffer(render, 1, 1)
 
       // Virtual object to render (Geospatial Marker)
-      virtualObjectMesh = Mesh.createFromAsset(render, "models/map_pin.obj")
+      virtualObjectMesh = Mesh.createFromAsset(render, "models/down_arrow.obj")
       virtualObjectShader =
         Shader.createFromAssets(
           render,
