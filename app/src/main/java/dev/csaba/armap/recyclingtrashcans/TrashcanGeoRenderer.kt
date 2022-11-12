@@ -36,14 +36,39 @@ import java.io.IOException
 import kotlin.math.*
 
 data class GpsLocation(val lat: Double, val lon: Double)
+data class LocationData(
+  val gpsLocation: GpsLocation,
+  val modelMatrix: FloatArray,
+  val modelViewMatrix: FloatArray,
+  val modelViewProjectionMatrix: FloatArray // projection x view x model
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as LocationData
+
+    if (gpsLocation != other.gpsLocation) return false
+    if (!modelMatrix.contentEquals(other.modelMatrix)) return false
+    if (!modelViewMatrix.contentEquals(other.modelViewMatrix)) return false
+    if (!modelViewProjectionMatrix.contentEquals(other.modelViewProjectionMatrix)) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = gpsLocation.hashCode()
+    result = 31 * result + modelMatrix.contentHashCode()
+    result = 31 * result + modelViewMatrix.contentHashCode()
+    result = 31 * result + modelViewProjectionMatrix.contentHashCode()
+    return result
+  }
+}
 
 data class MapArea(
   val name: String,
   var center: GpsLocation,
-  val gpsLocations: MutableList<GpsLocation>,
-  val modelMatrixes: MutableList<FloatArray>,
-  val modelViewMatrixes: MutableList<FloatArray>,
-  val modelViewProjectionMatrix: MutableList<FloatArray> // projection x view x model
+  val locationData: MutableList<LocationData>
 )
 
 class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
@@ -224,10 +249,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val mapArea = MapArea(
       name,
       GpsLocation(0.0, 0.0),
-      emptyList<GpsLocation>().toMutableList(),
-      emptyList<FloatArray>().toMutableList(),
-      emptyList<FloatArray>().toMutableList(),
-      emptyList<FloatArray>().toMutableList()
+      emptyList<LocationData>().toMutableList()
     )
 
     var latSum = 0.0
@@ -236,12 +258,9 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       val locationParts = location.split(",")
       val lat = locationParts[0].toDouble()
       val lon = locationParts[1].toDouble()
-      mapArea.gpsLocations.add(GpsLocation(lat, lon))
+      mapArea.locationData.add(LocationData(GpsLocation(lat, lon), FloatArray(16), FloatArray(16), FloatArray(16)))
       latSum += lat
       lonSum += lon
-      mapArea.modelMatrixes.add(FloatArray(16))
-      mapArea.modelViewMatrixes.add(FloatArray(16))
-      mapArea.modelViewProjectionMatrix.add(FloatArray(16))
     }
 
     mapArea.center = GpsLocation(latSum / locations.size, lonSum / locations.size)
@@ -251,11 +270,15 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     for ((i1, mapA) in mapAreas.withIndex()) {
       if (mapA.name == name) {
         found = true
-        if (haversineInKm(mapA.center.lat, mapA.center.lon, mapArea.center.lat, mapArea.center.lon) > 1e-7) {
+        if (haversineInKm(mapA.center.lat, mapA.center.lon,
+            mapArea.center.lat, mapArea.center.lon) > 1e-7)
+        {
           override = i1
         } else {
-          for ((i2, gpsLocation) in mapArea.gpsLocations.withIndex()) {
-            if (haversineInKm(gpsLocation.lat, gpsLocation.lon, mapA.gpsLocations[i2].lat, mapA.gpsLocations[i2].lon) > 1e-7) {
+          for ((i2, location) in mapArea.locationData.withIndex()) {
+            if (haversineInKm(location.gpsLocation.lat, location.gpsLocation.lon,
+                mapA.locationData[i2].gpsLocation.lat, mapA.locationData[i2].gpsLocation.lon) > 1e-7)
+            {
               override = i1
               break
             }
@@ -336,11 +359,14 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val cameraPose = earth.cameraGeospatialPose
     var areaIndex = -1
     for ((index, mapArea) in mapAreas.withIndex()) {
-      val closestLocation = mapArea.gpsLocations.minWithOrNull(Comparator.comparingDouble {
-        haversineInKm(it.lat, it.lon, cameraPose.latitude, cameraPose.longitude)
+      val closestLocation = mapArea.locationData.minWithOrNull(Comparator.comparingDouble {
+        haversineInKm(it.gpsLocation.lat, it.gpsLocation.lon, cameraPose.latitude, cameraPose.longitude)
       })
       if (closestLocation != null) {
-        val closestDistance = haversineInKm(closestLocation.lat, closestLocation.lon, cameraPose.latitude, cameraPose.longitude)
+        val closestDistance = haversineInKm(
+          closestLocation.gpsLocation.lat, closestLocation.gpsLocation.lon,
+          cameraPose.latitude, cameraPose.longitude
+        )
         if (closestDistance < AREA_PROXIMITY_THRESHOLD) {
           areaIndex = index
           break
@@ -367,17 +393,17 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val shouldAddAnchors = earthAnchors.isEmpty()
     val mapView = activity.view.mapView
     val shouldAddMarker = mapView != null && mapView.earthMarkers.isEmpty()
-    for (gpsLocation in mapAreas[areaIndex].gpsLocations) {
+    for (location in mapAreas[areaIndex].locationData) {
       if (shouldAddAnchors) {
         earthAnchors.add(earth.resolveAnchorOnTerrain(
-          gpsLocation.lat, gpsLocation.lon, HOVER_ABOVE_TERRAIN, qx, qy, qz, qw))
+          location.gpsLocation.lat, location.gpsLocation.lon, HOVER_ABOVE_TERRAIN, qx, qy, qz, qw))
       }
 
       if (shouldAddMarker) {
         mapView?.earthMarkers?.add(mapView.createMarker(
           mapView.EARTH_MARKER_COLOR,
-          gpsLocation.lat,
-          gpsLocation.lon,
+          location.gpsLocation.lat,
+          location.gpsLocation.lon,
           true,
           R.drawable.ic_marker_white_48dp,
         ))
@@ -400,14 +426,28 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
     // Get the current pose of the Anchor in world space. The Anchor pose is updated
     // during calls to session.update() as ARCore refines its estimate of the world.
-    anchor.pose.toMatrix(mapAreas[areaIndex].modelMatrixes[index], 0)
+    anchor.pose.toMatrix(mapAreas[areaIndex].locationData[index].modelMatrix, 0)
 
     // Calculate model/view/projection matrices
-    Matrix.multiplyMM(mapAreas[areaIndex].modelViewMatrixes[index], 0, viewMatrix, 0, mapAreas[areaIndex].modelMatrixes[index], 0)
-    Matrix.multiplyMM(mapAreas[areaIndex].modelViewProjectionMatrix[index], 0, projectionMatrix, 0, mapAreas[areaIndex].modelViewMatrixes[index], 0)
+    Matrix.multiplyMM(
+      mapAreas[areaIndex].locationData[index].modelViewMatrix,
+      0,
+      viewMatrix,
+      0,
+      mapAreas[areaIndex].locationData[index].modelMatrix,
+      0
+    )
+    Matrix.multiplyMM(
+      mapAreas[areaIndex].locationData[index].modelViewProjectionMatrix,
+      0,
+      projectionMatrix,
+      0,
+      mapAreas[areaIndex].locationData[index].modelViewMatrix,
+      0
+    )
 
     // Update shader properties and draw
-    virtualObjectShader.setMat4("u_ModelViewProjection", mapAreas[areaIndex].modelViewProjectionMatrix[index])
+    virtualObjectShader.setMat4("u_ModelViewProjection", mapAreas[areaIndex].locationData[index].modelViewProjectionMatrix)
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
   }
 
