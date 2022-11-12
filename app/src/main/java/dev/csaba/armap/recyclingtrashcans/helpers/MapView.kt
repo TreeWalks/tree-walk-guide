@@ -107,9 +107,9 @@ class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
     opt.inMutable = true
     val navigationIcon = BitmapFactory.decodeResource(activity.resources, iconId, opt)
     val p = Paint()
-    p.colorFilter = LightingColorFilter(color,  /* add= */1)
+    p.colorFilter = LightingColorFilter(color, 1)
     val canvas = Canvas(navigationIcon)
-    canvas.drawBitmap(navigationIcon,  /* left= */0f,  /* top= */0f, p)
+    canvas.drawBitmap(navigationIcon, 0f, 0f, p)
     return navigationIcon
   }
 }
