@@ -142,7 +142,8 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
           render,
           "shaders/ar_unlit_object.vert",
           "shaders/ar_unlit_object.frag",
-          null)
+          null
+        )
 
       backgroundRenderer.setUseDepthVisualization(render, false)
       backgroundRenderer.setUseOcclusion(render, false)
@@ -418,7 +419,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
       if (shouldAddMarker) {
         mapView?.earthMarkers?.add(mapView.createMarker(
-          mapView.EARTH_MARKER_COLOR,
+          mapView.GREEN_MARKER_COLOR,
           location.gpsLocation.lat,
           location.gpsLocation.lon,
           true,
