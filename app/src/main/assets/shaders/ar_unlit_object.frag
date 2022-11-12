@@ -19,6 +19,6 @@ precision mediump float;
 layout(location = 0) out vec4 o_FragColor;
 
 void main() {
-    o_FragColor = vec4(1.0, 0.02734375, 1.0, 0.152941176);
+    o_FragColor = vec4(0.152941176, 1.0, 0.02734375, 1.0);
     return;
 }
