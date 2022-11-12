@@ -89,6 +89,8 @@ class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
     color: Int,
     lat: Double = 0.0,
     lon: Double = 0.0,
+    title: String = "",
+    url: String = "",
     visible: Boolean = false,
     iconId: Int = R.drawable.ic_navigation_white_48dp,
   ): Marker {
@@ -99,6 +101,14 @@ class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
       .flat(true)
       .visible(visible)
       .icon(BitmapDescriptorFactory.fromBitmap(createColoredMarkerBitmap(color, iconId)))
+    if (title.isNotEmpty()) {
+      markersOptions.title(title)
+    }
+
+    if (url.isNotEmpty()) {
+      markersOptions.snippet(url)
+    }
+
     return googleMap.addMarker(markersOptions)!!
   }
 

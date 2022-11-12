@@ -422,6 +422,8 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
           mapView.GREEN_MARKER_COLOR,
           location.gpsLocation.lat,
           location.gpsLocation.lon,
+          location.title,
+          location.url,
           true,
           R.drawable.ic_marker_white_48dp,
         ))
