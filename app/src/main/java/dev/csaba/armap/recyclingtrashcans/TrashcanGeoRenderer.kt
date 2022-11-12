@@ -375,7 +375,6 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     }
 
     val cameraPose = earth.cameraGeospatialPose
-    var areaIndex = -1
     for ((index, mapArea) in mapAreas.withIndex()) {
       val closestLocation = mapArea.locationData.minWithOrNull(Comparator.comparingDouble {
         haversineInKm(it.gpsLocation.lat, it.gpsLocation.lon, cameraPose.latitude, cameraPose.longitude)
@@ -429,6 +428,8 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
         ))
       }
     }
+
+    populating = false
   }
 
   fun SampleRender.renderObjectAtAnchor(anchor: Anchor, index: Int) {
