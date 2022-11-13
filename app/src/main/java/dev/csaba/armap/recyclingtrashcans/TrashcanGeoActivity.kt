@@ -55,13 +55,13 @@ class TrashcanGeoActivity : AppCompatActivity() {
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
   lateinit var view: TrashcanGeoView
-  lateinit var renderer: TrashcanGeoRenderer
-  val fileDownloader by lazy {
+  private lateinit var renderer: TrashcanGeoRenderer
+  private val fileDownloader by lazy {
     FileDownloader(
       OkHttpClient.Builder().build()
     )
   }
-  var disposable = Disposables.disposed()
+  private var disposable = Disposables.disposed()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -141,7 +141,7 @@ class TrashcanGeoActivity : AppCompatActivity() {
   }
 
   // Configure the session, setting the desired options according to your usecase.
-  fun configureSession(session: Session) {
+  private fun configureSession(session: Session) {
     session.configure(
       session.config.apply {
         // Enable Geospatial Mode.
