@@ -377,11 +377,11 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val cameraPose = earth.cameraGeospatialPose
     for ((index, mapArea) in mapAreas.withIndex()) {
       val closestLocation = mapArea.locationData.minWithOrNull(Comparator.comparingDouble {
-        haversineInKm(it.gpsLocation.latitude, it.gpsLocation.latitude, cameraPose.latitude, cameraPose.longitude)
+        haversineInKm(it.gpsLocation.latitude, it.gpsLocation.longitude, cameraPose.latitude, cameraPose.longitude)
       })
       if (closestLocation != null) {
         val closestDistance = haversineInKm(
-          closestLocation.gpsLocation.latitude, closestLocation.gpsLocation.latitude,
+          closestLocation.gpsLocation.latitude, closestLocation.gpsLocation.longitude,
           cameraPose.latitude, cameraPose.longitude
         )
         if (closestDistance < AREA_PROXIMITY_THRESHOLD) {
@@ -413,7 +413,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     for (location in mapAreas[areaIndex].locationData) {
       if (shouldAddAnchors) {
         earthAnchors.add(earth.resolveAnchorOnTerrain(
-          location.gpsLocation.latitude, location.gpsLocation.latitude, HOVER_ABOVE_TERRAIN, qx, qy, qz, qw))
+          location.gpsLocation.latitude, location.gpsLocation.longitude, HOVER_ABOVE_TERRAIN, qx, qy, qz, qw))
       }
 
       if (shouldAddMarker) {
