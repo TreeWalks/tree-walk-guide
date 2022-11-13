@@ -38,11 +38,11 @@ class TrashcanGeoView(val activity: TrashcanGeoActivity) : DefaultLifecycleObser
   val snackbarHelper = SnackbarHelper()
 
   var mapView: MapView? = null
-  val mapTouchWrapper: MapTouchWrapper = root.findViewById<MapTouchWrapper>(R.id.map_wrapper).apply {
-    setup {
-      activity.renderer.onMapClick()
-    }
-  }
+//  val mapTouchWrapper: MapTouchWrapper = root.findViewById<MapTouchWrapper>(R.id.map_wrapper).apply {
+//    setup {
+//      activity.renderer.onMapClick()
+//    }
+//  }
   val mapFragment =
     (activity.supportFragmentManager.findFragmentById(R.id.map)!! as SupportMapFragment).also {
       it.getMapAsync { googleMap -> mapView = MapView(activity, googleMap) }
