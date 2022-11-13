@@ -238,6 +238,8 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
       if (BuildConfig.BUILD_TYPE.equals("debug")) {
         activity.view.updateStatusText(earth, cameraGeospatialPose)
+      } else {
+        activity.view.updateStatusTextString("")
       }
     } else if (!BuildConfig.BUILD_TYPE.equals("debug")) {
       activity.view.updateStatusTextString(activity.resources.getString(R.string.calculating))
