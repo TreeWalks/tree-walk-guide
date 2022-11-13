@@ -20,6 +20,7 @@ import android.os.CountDownTimer
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Anchor
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.CameraNotAvailableException
@@ -35,9 +36,8 @@ import java.io.FileReader
 import java.io.IOException
 import kotlin.math.*
 
-data class GpsLocation(val lat: Double, val lon: Double)
 data class LocationData(
-  val gpsLocation: GpsLocation,
+  val gpsLocation: LatLng,
   val title: String,
   val url: String,
   val modelMatrix: FloatArray,
@@ -73,7 +73,7 @@ data class LocationData(
 
 data class MapArea(
   val name: String,
-  var center: GpsLocation,
+  var center: LatLng,
   val locationData: MutableList<LocationData>
 )
 
@@ -255,7 +255,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
   private fun processLocationArray(name: String, locations: Array<String>) {
     val mapArea = MapArea(
       name,
-      GpsLocation(0.0, 0.0),
+      LatLng(0.0, 0.0),
       emptyList<LocationData>().toMutableList()
     )
 
@@ -269,7 +269,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       val url = if (locationParts.size > 3) locationParts[3] else ""
       mapArea.locationData.add(
         LocationData(
-          GpsLocation(lat, lon),
+          LatLng(lat, lon),
           title,
           url,
           FloatArray(16),
@@ -281,21 +281,21 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       lonSum += lon
     }
 
-    mapArea.center = GpsLocation(latSum / locations.size, lonSum / locations.size)
+    mapArea.center = LatLng(latSum / locations.size, lonSum / locations.size)
 
     var override = -1
     var found = false
     for ((i1, mapA) in mapAreas.withIndex()) {
       if (mapA.name == name) {
         found = true
-        if (haversineInKm(mapA.center.lat, mapA.center.lon,
-            mapArea.center.lat, mapArea.center.lon) > 1e-7)
+        if (haversineInKm(mapA.center.latitude, mapA.center.longitude,
+            mapArea.center.latitude, mapArea.center.longitude) > 1e-7)
         {
           override = i1
         } else {
           for ((i2, location) in mapArea.locationData.withIndex()) {
-            if (haversineInKm(location.gpsLocation.lat, location.gpsLocation.lon,
-                mapA.locationData[i2].gpsLocation.lat, mapA.locationData[i2].gpsLocation.lon) > 1e-7)
+            if (haversineInKm(location.gpsLocation.latitude, location.gpsLocation.longitude,
+                mapA.locationData[i2].gpsLocation.latitude, mapA.locationData[i2].gpsLocation.longitude) > 1e-7)
             {
               override = i1
               break
@@ -377,11 +377,11 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     val cameraPose = earth.cameraGeospatialPose
     for ((index, mapArea) in mapAreas.withIndex()) {
       val closestLocation = mapArea.locationData.minWithOrNull(Comparator.comparingDouble {
-        haversineInKm(it.gpsLocation.lat, it.gpsLocation.lon, cameraPose.latitude, cameraPose.longitude)
+        haversineInKm(it.gpsLocation.latitude, it.gpsLocation.latitude, cameraPose.latitude, cameraPose.longitude)
       })
       if (closestLocation != null) {
         val closestDistance = haversineInKm(
-          closestLocation.gpsLocation.lat, closestLocation.gpsLocation.lon,
+          closestLocation.gpsLocation.latitude, closestLocation.gpsLocation.latitude,
           cameraPose.latitude, cameraPose.longitude
         )
         if (closestDistance < AREA_PROXIMITY_THRESHOLD) {
@@ -413,14 +413,14 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     for (location in mapAreas[areaIndex].locationData) {
       if (shouldAddAnchors) {
         earthAnchors.add(earth.resolveAnchorOnTerrain(
-          location.gpsLocation.lat, location.gpsLocation.lon, HOVER_ABOVE_TERRAIN, qx, qy, qz, qw))
+          location.gpsLocation.latitude, location.gpsLocation.latitude, HOVER_ABOVE_TERRAIN, qx, qy, qz, qw))
       }
 
       if (shouldAddMarker) {
         mapView?.earthMarkers?.add(mapView.createMarker(
           mapView.GREEN_MARKER_COLOR,
-          location.gpsLocation.lat,
-          location.gpsLocation.lon,
+          location.gpsLocation.latitude,
+          location.gpsLocation.longitude,
           location.title,
           location.url,
           true,
