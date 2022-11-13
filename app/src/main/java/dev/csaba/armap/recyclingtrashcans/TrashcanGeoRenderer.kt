@@ -438,7 +438,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     populating = false
   }
 
-  fun SampleRender.renderObjectAtAnchor(anchor: Anchor, index: Int) {
+  private fun SampleRender.renderObjectAtAnchor(anchor: Anchor, index: Int) {
     if (areaIndex < 0 || populating) {
       return
     }
