@@ -15,15 +15,21 @@
  */
 package dev.csaba.armap.recyclingtrashcans.helpers
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LightingColorFilter
 import android.graphics.Paint
+import android.net.Uri
+import android.os.Build
+import android.util.Log
 import androidx.annotation.ColorInt
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -32,15 +38,19 @@ import com.google.android.gms.maps.model.MarkerOptions
 import dev.csaba.armap.recyclingtrashcans.TrashcanGeoActivity
 import dev.csaba.armap.recyclingtrashcans.R
 
-class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMap) {
+class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMap): OnInfoWindowClickListener {
+  companion object {
+    const val TAG = "MapView"
+  }
+
   private val cameraMarkerColor: Int = Color.argb(255, 255, 0, 0)
   val greenMarkerColor: Int = Color.argb(255, 39, 213, 7)
 
   private var setInitialCameraPosition = false
-  private val cameraMarker = createMarker(cameraMarkerColor)
+  private val cameraMarker = createMarker(cameraMarkerColor, title = "You")
   private var cameraIdle = true
 
-  var earthMarkers: MutableList<Marker> = emptyList<Marker>().toMutableList()
+  var earthMarkers: MutableList<Marker?> = emptyList<Marker?>().toMutableList()
 
   init {
     googleMap.uiSettings.apply {
@@ -52,6 +62,7 @@ class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMa
     }
 
     googleMap.setOnMarkerClickListener { false }
+    googleMap.setOnInfoWindowClickListener(this)
 
     // Add listeners to keep track of when the GoogleMap camera is moving.
     googleMap.setOnCameraMoveListener { cameraIdle = false }
@@ -65,9 +76,10 @@ class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMa
       if (!cameraIdle) {
         return@runOnUiThread
       }
-      cameraMarker.isVisible = true
-      cameraMarker.position = position
-      cameraMarker.rotation = heading.toFloat()
+
+      cameraMarker?.isVisible = true
+      cameraMarker?.position = position
+      cameraMarker?.rotation = heading.toFloat()
 
       val cameraPositionBuilder: CameraPosition.Builder = if (!setInitialCameraPosition) {
         // Set the camera position with an initial default zoom level.
@@ -79,6 +91,7 @@ class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMa
           .zoom(googleMap.cameraPosition.zoom)
           .target(position)
       }
+
       googleMap.moveCamera(
         CameraUpdateFactory.newCameraPosition(cameraPositionBuilder.build()))
     }
@@ -90,26 +103,30 @@ class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMa
     lat: Double = 0.0,
     lon: Double = 0.0,
     title: String = "",
+    snippet: String = "",
     url: String = "",
     visible: Boolean = false,
     iconId: Int = R.drawable.ic_navigation_white_48dp,
-  ): Marker {
-    val markersOptions = MarkerOptions()
+  ): Marker? {
+    val markerOptions = MarkerOptions()
       .position(LatLng(lat, lon))
       .draggable(false)
       .anchor(0.5f, 0.5f)
       .flat(true)
       .visible(visible)
       .icon(BitmapDescriptorFactory.fromBitmap(createColoredMarkerBitmap(color, iconId)))
+
     if (title.isNotEmpty()) {
-      markersOptions.title(title)
+      markerOptions.title(title)
     }
 
-    if (url.isNotEmpty()) {
-      markersOptions.snippet(url)
+    if (snippet.isNotEmpty()) {
+      markerOptions.snippet(snippet)
     }
 
-    return googleMap.addMarker(markersOptions)!!
+    val marker = googleMap.addMarker(markerOptions)
+    marker?.tag = url
+    return marker
   }
 
   private fun createColoredMarkerBitmap(@ColorInt color: Int, iconId: Int): Bitmap {
@@ -121,5 +138,21 @@ class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMa
     val canvas = Canvas(navigationIcon)
     canvas.drawBitmap(navigationIcon, 0f, 0f, p)
     return navigationIcon
+  }
+
+  override fun onInfoWindowClick(marker: Marker) {
+    val url: String = marker.tag as String? ?: return
+    try {
+      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+        // The URL should either launch directly in a non-browser app
+        // (if it’s the default), or in the disambiguation dialog
+        addCategory(Intent.CATEGORY_BROWSABLE)
+        flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+          Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REQUIRE_DEFAULT else Intent.FLAG_ACTIVITY_NEW_TASK
+      }
+      activity.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+      Log.e(TAG, "Could not open URL", e)
+    }
   }
 }
