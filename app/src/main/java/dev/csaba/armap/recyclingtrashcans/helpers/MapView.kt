@@ -120,7 +120,7 @@ class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMa
       markerOptions.title(title)
     }
 
-    if (snippet.isNotEmpty()) {
+    if (snippet.isNotEmpty() && url.isNotEmpty()) {
       markerOptions.snippet(snippet)
     }
 
@@ -142,6 +142,10 @@ class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMa
 
   override fun onInfoWindowClick(marker: Marker) {
     val url: String = marker.tag as String? ?: return
+    if (url.isEmpty()) {
+      return
+    }
+
     try {
       val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
         // The URL should either launch directly in a non-browser app
