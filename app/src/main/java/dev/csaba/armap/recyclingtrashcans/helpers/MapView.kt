@@ -32,13 +32,13 @@ import com.google.android.gms.maps.model.MarkerOptions
 import dev.csaba.armap.recyclingtrashcans.TrashcanGeoActivity
 import dev.csaba.armap.recyclingtrashcans.R
 
-class MapView(val activity: TrashcanGeoActivity, val googleMap: GoogleMap) {
-  private val CAMERA_MARKER_COLOR: Int = Color.argb(255, 255, 0, 0)
-  val GREEN_MARKER_COLOR: Int = Color.argb(255, 39, 213, 7)
+class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMap) {
+  private val cameraMarkerColor: Int = Color.argb(255, 255, 0, 0)
+  val greenMarkerColor: Int = Color.argb(255, 39, 213, 7)
 
-  var setInitialCameraPosition = false
-  val cameraMarker = createMarker(CAMERA_MARKER_COLOR)
-  var cameraIdle = true
+  private var setInitialCameraPosition = false
+  private val cameraMarker = createMarker(cameraMarkerColor)
+  private var cameraIdle = true
 
   var earthMarkers: MutableList<Marker> = emptyList<Marker>().toMutableList()
 

@@ -418,7 +418,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
 
       if (shouldAddMarker) {
         mapView?.earthMarkers?.add(mapView.createMarker(
-          mapView.GREEN_MARKER_COLOR,
+          mapView.greenMarkerColor,
           location.gpsLocation.latitude,
           location.gpsLocation.longitude,
           location.title,
