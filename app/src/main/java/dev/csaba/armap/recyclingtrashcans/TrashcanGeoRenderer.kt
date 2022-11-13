@@ -224,7 +224,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     // Step 1.1.: Obtain Geospatial information and display it on the map.
     val earth = session.earth
     if (earth?.trackingState == TrackingState.TRACKING) {
-      if (areaIndex < 0 && !populating) {
+      if (areaIndex < 0 && !populating && loaded) {
         populating = true
         timer.start()
       }
