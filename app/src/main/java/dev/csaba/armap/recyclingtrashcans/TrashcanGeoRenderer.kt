@@ -282,6 +282,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     }
 
     mapArea.center = LatLng(latSum / locations.size, lonSum / locations.size)
+    Log.i(TAG, "$name center ${mapArea.center.latitude} ${mapArea.center.longitude}")
 
     var override = -1
     var found = false
@@ -384,6 +385,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
           closestLocation.gpsLocation.latitude, closestLocation.gpsLocation.longitude,
           cameraPose.latitude, cameraPose.longitude
         )
+        Log.i(TAG, "Distance from ${mapArea.name} is $closestDistance")
         if (closestDistance < AREA_PROXIMITY_THRESHOLD) {
           areaIndex = index
           break
