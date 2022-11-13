@@ -73,7 +73,9 @@ class TrashcanGeoView(val activity: TrashcanGeoActivity) : DefaultLifecycleObser
 
   fun updateStatusTextString(statusMessage: String) {
     activity.runOnUiThread {
-      statusText.text = statusMessage
+      if (!statusText.text.equals(statusMessage)) {
+        statusText.text = statusMessage
+      }
     }
   }
 
