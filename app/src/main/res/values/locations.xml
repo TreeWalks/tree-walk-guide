@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string-array name="csu_fresno">
-    <item>36.813174,-119.7454102,Satellite Student Union South,https://recyclingtrashcans.github.io//vrview/2020/08/08/ssu_south.html</item>
-    <item>36.813985,-119.7453072,Satellite Student Union North 2,https://recyclingtrashcans.github.io//vrview/2020/08/08/ssu_north2.html</item>
-    <item>36.813988,-119.7451492,Satellite Student Union North 1,https://recyclingtrashcans.github.io//vrview/2020/08/08/ssu_north1.html</item>
-    <item>36.814453,-119.7444892,SW of Downing Planetarium,https://recyclingtrashcans.github.io//vrview/2020/08/08/planetarium_sw.html</item>
-    <item>36.814397,-119.7443032,SE of Downing Planetarium,https://recyclingtrashcans.github.io//vrview/2020/08/08/planetarium_se.html</item>
-    <item>36.813846,-119.7440812,North of Science I,https://recyclingtrashcans.github.io//vrview/2020/08/08/s1_north.html</item>
-    <item>36.812859,-119.7439182,Northwest of Peters Business,https://recyclingtrashcans.github.io//vrview/2020/08/08/b_nw.html</item>
-    <item>36.813215,-119.7441162,South of Science I,https://recyclingtrashcans.github.io//vrview/2020/08/08/s1_south.html</item>
-    <item>36.81436,-119.7426592,Science II towards P5/P6,https://recyclingtrashcans.github.io//vrview/2020/08/08/s2_p5p6.html</item>
-    <item>36.814759,-119.7435032,Science II Garden 2,https://recyclingtrashcans.github.io//vrview/2020/08/08/s2_garden2.html</item>
-    <item>36.814625,-119.7437472,Science II Garden 1,https://recyclingtrashcans.github.io//vrview/2020/08/08/s2_garden1.html</item>
-    <item>36.814353,-119.7439092,Science II South,https://recyclingtrashcans.github.io//vrview/2020/08/08/s2_south.html</item>
-    <item>36.814932,-119.7439002,Science II West,https://recyclingtrashcans.github.io//vrview/2020/08/08/s2_west.html</item>
+    <item>36.813174,-119.7454102,Satellite Student Union South,https://recyclingtrashcans.github.io/vrview/2020/08/08/ssu_south.html</item>
+    <item>36.813985,-119.7453072,Satellite Student Union North 2,https://recyclingtrashcans.github.io/vrview/2020/08/08/ssu_north2.html</item>
+    <item>36.813988,-119.7451492,Satellite Student Union North 1,https://recyclingtrashcans.github.io/vrview/2020/08/08/ssu_north1.html</item>
+    <item>36.814453,-119.7444892,SW of Downing Planetarium,https://recyclingtrashcans.github.io/vrview/2020/08/08/planetarium_sw.html</item>
+    <item>36.814397,-119.7443032,SE of Downing Planetarium,https://recyclingtrashcans.github.io/vrview/2020/08/08/planetarium_se.html</item>
+    <item>36.813846,-119.7440812,North of Science I,https://recyclingtrashcans.github.io/vrview/2020/08/08/s1_north.html,trashcan</item>
+    <item>36.812859,-119.7439182,Northwest of Peters Business,https://recyclingtrashcans.github.io/vrview/2020/08/08/b_nw.html</item>
+    <item>36.813215,-119.7441162,South of Science I,https://recyclingtrashcans.github.io/vrview/2020/08/08/s1_south.html</item>
+    <item>36.81436,-119.7426592,Science II towards P5/P6,https://recyclingtrashcans.github.io/vrview/2020/08/08/s2_p5p6.html</item>
+    <item>36.814759,-119.7435032,Science II Garden 2,https://recyclingtrashcans.github.io/vrview/2020/08/08/s2_garden2.html</item>
+    <item>36.814625,-119.7437472,Science II Garden 1,https://recyclingtrashcans.github.io/vrview/2020/08/08/s2_garden1.html</item>
+    <item>36.814353,-119.7439092,Science II South,https://recyclingtrashcans.github.io/vrview/2020/08/08/s2_south.html</item>
+    <item>36.814932,-119.7439002,Science II West,https://recyclingtrashcans.github.io/vrview/2020/08/08/s2_west.html</item>
   </string-array>
   <string-array name="park_ridge">
     <item>36.862358,-119.793572,Entrance 1,https://recyclingtrashcans.github.io/</item>
