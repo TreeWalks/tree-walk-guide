@@ -38,9 +38,9 @@ import java.util.*
 import kotlin.Comparator
 import kotlin.math.*
 
-enum class LocationKind(val model: String) {
-  POI("map_pin"),
-  TRASHCAN("down_arrow");
+enum class LocationKind {
+  POI,
+  TRASHCAN;
 
   companion object {
     fun getByName(name: String) = valueOf(name.uppercase(Locale.getDefault()))
