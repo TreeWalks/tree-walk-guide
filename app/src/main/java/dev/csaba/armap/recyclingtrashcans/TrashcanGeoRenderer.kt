@@ -50,8 +50,8 @@ enum class LocationKind {
 data class LocationData(
   val gpsLocation: LatLng,
   val title: String,
-  val url: String,
   val kind: LocationKind,
+  val url: String,
   val modelMatrix: FloatArray,
   val modelViewMatrix: FloatArray,
   val modelViewProjectionMatrix: FloatArray // projection x view x model
@@ -286,18 +286,18 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
     var latSum = 0.0
     var lonSum = 0.0
     for (location in locations) {
-      val locationParts = location.split(",")
+      val locationParts = location.split("|")
       val lat = locationParts[0].trim().toDouble()
       val lon = locationParts[1].trim().toDouble()
       val title = if (locationParts.size > 2) locationParts[2].trim() else ""
-      val url = if (locationParts.size > 3) locationParts[3].trim() else ""
-      val kind = if (locationParts.size > 4) LocationKind.getByName(locationParts[4].trim()) else LocationKind.POI
+      val kind = if (locationParts.size > 3) LocationKind.getByName(locationParts[3].trim()) else LocationKind.POI
+      val url = if (locationParts.size > 4) locationParts[4].trim() else ""
       mapArea.locationData.add(
         LocationData(
           LatLng(lat, lon),
           title,
-          url,
           kind,
+          url,
           FloatArray(16),
           FloatArray(16),
           FloatArray(16)
