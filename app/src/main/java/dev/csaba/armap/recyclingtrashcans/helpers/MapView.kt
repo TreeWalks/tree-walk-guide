@@ -106,7 +106,7 @@ class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMa
     snippet: String = "",
     url: String = "",
     visible: Boolean = false,
-    iconId: Int = R.drawable.ic_navigation_white_48dp,
+    iconId: Int = R.drawable.ic_arrow_white_48dp,
   ): Marker? {
     val markerOptions = MarkerOptions()
       .position(LatLng(lat, lon))
