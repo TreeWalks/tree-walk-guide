@@ -454,7 +454,7 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
           infoSnippet,
           location.url,
           true,
-          R.drawable.ic_marker_white_48dp,
+          R.drawable.ic_recycle_white_48dp,
         ))
       }
     }
