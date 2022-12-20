@@ -475,13 +475,33 @@ class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
       return
     }
 
+    // Calculate model/view/projection matrices
+    val currentTimeMillis = System.currentTimeMillis()
+    val transformationMatrix = FloatArray(16)
+    val locData = mapAreas[areaIndex].locationData[index]
+    if (locData.kind == LocationKind.TRASHCAN) {
+      Matrix.setIdentityM(transformationMatrix, 0)
+      // Bounce animation follows a half sine wave
+      val angleRadian = currentTimeMillis % 1000 * Math.PI / 1000f
+      val deltaY = sin(angleRadian)
+      // Y translation position:
+      // https://www.brainvoyager.com/bv/doc/UsersGuide/CoordsAndTransforms/SpatialTransformationMatrices.html
+      // Combined with OpenGL ES format matrices:
+      // 4 x 4 column-vector matrices stored in column-major order
+      // (row major 7. (0-based) pos. is 13. (0-based) column major pos.)
+      transformationMatrix[13] = deltaY.toFloat()
+    } else {
+      // Spin around once per second
+      val angleDegrees = currentTimeMillis % 1000 * 360f / 1000f
+      Matrix.setRotateM(transformationMatrix, 0, angleDegrees, 0f, 1f, 0f)
+    }
+    val transformedModelMatrix = FloatArray(16)
+
     // Get the current pose of the Anchor in world space. The Anchor pose is updated
     // during calls to session.update() as ARCore refines its estimate of the world.
-    val locData = mapAreas[areaIndex].locationData[index]
     anchor.pose.toMatrix(locData.modelMatrix, 0)
-
-    // Calculate model/view/projection matrices
-    Matrix.multiplyMM(locData.modelViewMatrix, 0, viewMatrix, 0, locData.modelMatrix, 0)
+    Matrix.multiplyMM(transformedModelMatrix, 0, locData.modelMatrix, 0, transformationMatrix, 0)
+    Matrix.multiplyMM(locData.modelViewMatrix, 0, viewMatrix, 0, transformedModelMatrix, 0)
     Matrix.multiplyMM(locData.modelViewProjectionMatrix, 0, projectionMatrix, 0, locData.modelViewMatrix, 0)
 
     // Update shader properties and draw
