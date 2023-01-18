@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.csaba.armap.recyclingtrashcans.helpers
+package dev.csaba.armap.treewalk.helpers
 
 import android.opengl.GLSurfaceView
 import android.view.View
@@ -23,12 +23,12 @@ import androidx.lifecycle.LifecycleOwner
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.ar.core.Earth
 import com.google.ar.core.GeospatialPose
-import dev.csaba.armap.recyclingtrashcans.TrashcanGeoActivity
-import dev.csaba.armap.recyclingtrashcans.R
+import dev.csaba.armap.treewalk.TreeWalkGeoActivity
+import dev.csaba.armap.treewalk.R
 import dev.csaba.armap.common.helpers.SnackbarHelper
 
-/** Contains UI elements for Trashcan Geo. */
-class TrashcanGeoView(val activity: TrashcanGeoActivity) : DefaultLifecycleObserver {
+/** Contains UI elements for Tree Walk Geo. */
+class TreeWalkGeoView(val activity: TreeWalkGeoActivity) : DefaultLifecycleObserver {
   val root: View = View.inflate(activity, R.layout.activity_main, null)
   val surfaceView: GLSurfaceView = root.findViewById(R.id.surfaceview)
 

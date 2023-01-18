@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.csaba.armap.recyclingtrashcans
+package dev.csaba.armap.treewalk
 
 import android.os.Bundle
 import android.util.Log
@@ -27,10 +27,10 @@ import com.google.ar.core.exceptions.UnavailableApkTooOldException
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
-import dev.csaba.armap.recyclingtrashcans.helpers.ARCoreSessionLifecycleHelper
-import dev.csaba.armap.recyclingtrashcans.helpers.GeoPermissionsHelper
-import dev.csaba.armap.recyclingtrashcans.helpers.FileDownloader
-import dev.csaba.armap.recyclingtrashcans.helpers.TrashcanGeoView
+import dev.csaba.armap.treewalk.helpers.ARCoreSessionLifecycleHelper
+import dev.csaba.armap.treewalk.helpers.GeoPermissionsHelper
+import dev.csaba.armap.treewalk.helpers.FileDownloader
+import dev.csaba.armap.treewalk.helpers.TreeWalkGeoView
 import dev.csaba.armap.common.helpers.FullScreenHelper
 import dev.csaba.armap.common.samplerender.SampleRender
 import io.reactivex.BackpressureStrategy
@@ -46,16 +46,16 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
 
-class TrashcanGeoActivity : AppCompatActivity() {
+class TreeWalkGeoActivity : AppCompatActivity() {
   companion object {
-    private const val TAG = "TrashcanGeoActivity"
+    private const val TAG = "TreeWalkGeoActivity"
     private const val LOCATIONS_FILE_NAME = "locations_v2_2.xml"
-    private const val LOCATIONS_URL = "https://recyclingtrashcans.github.io/locations_v2.xml"
+    private const val LOCATIONS_URL = "https://treewalks.github.io/locations.xml"
   }
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
-  lateinit var view: TrashcanGeoView
-  private lateinit var renderer: TrashcanGeoRenderer
+  lateinit var view: TreeWalkGeoView
+  private lateinit var renderer: TreeWalkGeoRenderer
   private val fileDownloader by lazy {
     FileDownloader(
       OkHttpClient.Builder().build()
@@ -94,16 +94,16 @@ class TrashcanGeoActivity : AppCompatActivity() {
     arCoreSessionHelper.beforeSessionResume = ::configureSession
     lifecycle.addObserver(arCoreSessionHelper)
 
-    // Set up the Trashcan AR renderer.
-    renderer = TrashcanGeoRenderer(this)
+    // Set up the Tree Walk AR renderer.
+    renderer = TreeWalkGeoRenderer(this)
     lifecycle.addObserver(renderer)
 
-    // Set up Trashcan AR UI.
-    view = TrashcanGeoView(this)
+    // Set up Tree Walk AR UI.
+    view = TreeWalkGeoView(this)
     lifecycle.addObserver(view)
     setContentView(view.root)
 
-    // Sets up an example renderer using our TrashcanGeoRenderer.
+    // Sets up an example renderer using our TreeWalkGeoRenderer.
     SampleRender(view.surfaceView, renderer, assets)
 
     lifecycle.coroutineScope.launch {

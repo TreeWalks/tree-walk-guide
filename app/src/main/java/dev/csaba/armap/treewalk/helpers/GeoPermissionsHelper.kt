@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.csaba.armap.recyclingtrashcans.helpers
+package dev.csaba.armap.treewalk.helpers
 
 import android.Manifest
 import android.app.Activity

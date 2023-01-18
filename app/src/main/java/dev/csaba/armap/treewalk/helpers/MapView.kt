@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.csaba.armap.recyclingtrashcans.helpers
+package dev.csaba.armap.treewalk.helpers
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -35,10 +35,10 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import dev.csaba.armap.recyclingtrashcans.TrashcanGeoActivity
-import dev.csaba.armap.recyclingtrashcans.R
+import dev.csaba.armap.treewalk.TreeWalkGeoActivity
+import dev.csaba.armap.treewalk.R
 
-class MapView(val activity: TrashcanGeoActivity, private val googleMap: GoogleMap): OnInfoWindowClickListener {
+class MapView(val activity: TreeWalkGeoActivity, private val googleMap: GoogleMap): OnInfoWindowClickListener {
   companion object {
     const val TAG = "MapView"
   }

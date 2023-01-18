@@ -4,7 +4,7 @@ apply plugin: 'kotlin-android'
 android {
     compileSdkVersion 33
     defaultConfig {
-        applicationId "dev.csaba.armap.recyclingtrashcans"
+        applicationId "dev.csaba.armap.treewalk"
 
         // AR Optional apps must declare minSdkVersion >= 14.
         // AR Required apps must declare minSdkVersion >= 24.
@@ -26,7 +26,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    namespace 'dev.csaba.armap.recyclingtrashcans'
+    namespace 'dev.csaba.armap.treewalk'
 }
 
 dependencies {

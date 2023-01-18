@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.csaba.armap.recyclingtrashcans
+package dev.csaba.armap.treewalk
 
 import android.opengl.Matrix
 import android.os.CountDownTimer
@@ -89,11 +89,11 @@ data class MapArea(
   val locationData: MutableList<LocationData>
 )
 
-class TrashcanGeoRenderer(val activity: TrashcanGeoActivity) :
+class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   SampleRender.Renderer, DefaultLifecycleObserver {
   //<editor-fold desc="ARCore initialization" defaultstate="collapsed">
   companion object {
-    const val TAG = "TrashcanGeoRenderer"
+    const val TAG = "TreeWalkGeoRenderer"
 
     private const val Z_NEAR = 0.1f
     private const val Z_FAR = 1000f

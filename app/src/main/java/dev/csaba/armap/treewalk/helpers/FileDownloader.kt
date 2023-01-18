@@ -3,7 +3,7 @@
  * https://github.com/elye/demo_android_pdf_reader_viewpager2
  * https://github.com/elye/demo_android_pdf_reader_viewpager2/blob/master/app/src/main/java/com/example/pdfreader/FileDownloader.kt
  */
-package dev.csaba.armap.recyclingtrashcans.helpers
+package dev.csaba.armap.treewalk.helpers
 
 import io.reactivex.Observable
 import okhttp3.OkHttpClient
