@@ -5,13 +5,10 @@ android {
     compileSdkVersion 33
     defaultConfig {
         applicationId "dev.csaba.armap.treewalk"
-
-        // AR Optional apps must declare minSdkVersion >= 14.
-        // AR Required apps must declare minSdkVersion >= 24.
         minSdkVersion 24
         targetSdkVersion 33
-        versionCode 9
-        versionName '1.9'
+        versionCode 1
+        versionName '1.1'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
