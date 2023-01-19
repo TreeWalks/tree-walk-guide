@@ -15,24 +15,28 @@
  */
 package dev.csaba.armap.treewalk
 
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.coroutineScope
+import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton
+import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu
+import com.oguzdev.circularfloatingactionmenu.library.SubActionButton
 import com.google.ar.core.Config
 import com.google.ar.core.Session
-import com.google.ar.core.exceptions.CameraNotAvailableException
-import com.google.ar.core.exceptions.UnavailableApkTooOldException
-import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
-import com.google.ar.core.exceptions.UnavailableSdkTooOldException
-import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
-import dev.csaba.armap.treewalk.helpers.ARCoreSessionLifecycleHelper
-import dev.csaba.armap.treewalk.helpers.GeoPermissionsHelper
-import dev.csaba.armap.treewalk.helpers.FileDownloader
-import dev.csaba.armap.treewalk.helpers.TreeWalkGeoView
+import com.google.ar.core.exceptions.*
 import dev.csaba.armap.common.helpers.FullScreenHelper
 import dev.csaba.armap.common.samplerender.SampleRender
+import dev.csaba.armap.treewalk.helpers.ARCoreSessionLifecycleHelper
+import dev.csaba.armap.treewalk.helpers.FileDownloader
+import dev.csaba.armap.treewalk.helpers.GeoPermissionsHelper
+import dev.csaba.armap.treewalk.helpers.TreeWalkGeoView
 import io.reactivex.BackpressureStrategy
 import io.reactivex.android.schedulers.AndroidSchedulers.*
 import io.reactivex.disposables.Disposables
@@ -40,11 +44,11 @@ import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import java.io.File
 import java.util.concurrent.TimeUnit
-import okhttp3.OkHttpClient
 
 class TreeWalkGeoActivity : AppCompatActivity() {
   companion object {
@@ -62,6 +66,59 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     )
   }
   private var disposable = Disposables.disposed()
+
+  private fun createCircularFABMenu() {
+    // Set up the white button on the lower right corner
+    // more or less with default parameter
+
+    // Set up the white button on the lower right corner
+    // more or less with default parameter
+    val fabIconNew = ImageView(this)
+    fabIconNew.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_new_light))
+    val rightLowerButton: FloatingActionButton = FloatingActionButton.Builder(this)
+      .setContentView(fabIconNew)
+      .build()
+
+    val rLSubBuilder: SubActionButton.Builder = SubActionButton.Builder(this)
+    val rlIcon1 = ImageView(this)
+    val rlIcon2 = ImageView(this)
+    val rlIcon3 = ImageView(this)
+    val rlIcon4 = ImageView(this)
+
+    rlIcon1.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_chat_light))
+    rlIcon2.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_camera_light))
+    rlIcon3.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_video_light))
+    rlIcon4.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_place_light))
+
+    // Build the menu with default options: light theme, 90 degrees, 72dp radius.
+    // Set 4 default SubActionButtons
+    val rightLowerMenu: FloatingActionMenu = FloatingActionMenu.Builder(this)
+      .addSubActionView(rLSubBuilder.setContentView(rlIcon1).build())
+      .addSubActionView(rLSubBuilder.setContentView(rlIcon2).build())
+      .addSubActionView(rLSubBuilder.setContentView(rlIcon3).build())
+      .addSubActionView(rLSubBuilder.setContentView(rlIcon4).build())
+      .attachTo(rightLowerButton)
+      .build()
+
+    // Listen menu open and close events to animate the button content view
+    rightLowerMenu.setStateChangeListener(object : FloatingActionMenu.MenuStateChangeListener {
+      override fun onMenuOpened(menu: FloatingActionMenu?) {
+        // Rotate the icon of rightLowerButton 45 degrees clockwise
+        fabIconNew.rotation = 0f
+        val pvhR = PropertyValuesHolder.ofFloat(View.ROTATION, 45f)
+        val animation = ObjectAnimator.ofPropertyValuesHolder(fabIconNew, pvhR)
+        animation.start()
+      }
+
+      override fun onMenuClosed(menu: FloatingActionMenu?) {
+        // Rotate the icon of rightLowerButton 45 degrees counter-clockwise
+        fabIconNew.rotation = 45f
+        val pvhR = PropertyValuesHolder.ofFloat(View.ROTATION, 0f)
+        val animation = ObjectAnimator.ofPropertyValuesHolder(fabIconNew, pvhR)
+        animation.start()
+      }
+    })
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -105,6 +162,9 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     // Sets up an example renderer using our TreeWalkGeoRenderer.
     SampleRender(view.surfaceView, renderer, assets)
+
+    // Create circular FAB menu
+    createCircularFABMenu()
 
     lifecycle.coroutineScope.launch {
       downloadLocationsAsync()
