@@ -170,8 +170,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       backgroundRenderer.setUseDepthVisualization(render, false)
       backgroundRenderer.setUseOcclusion(render, false)
 
-      processLocationArray("csu_fresno", activity.resources.getStringArray(R.array.csu_fresno))
-      processLocationArray("park_ridge", activity.resources.getStringArray(R.array.park_ridge))
+      // processLocationArray("tree_walk", activity.resources.getStringArray(R.array.tree_walk))
     } catch (e: IOException) {
       Log.e(TAG, "Failed to read a required asset file", e)
     }
