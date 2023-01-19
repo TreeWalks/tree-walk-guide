@@ -72,33 +72,40 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   private fun createCircularFABMenu() {
     // Set up the white button on the lower right corner
     // more or less with default parameter
-
-    // Set up the white button on the lower right corner
-    // more or less with default parameter
-    val fabIconNew = ImageView(this)
-    fabIconNew.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_new_light))
+    val fabMenuIcon = ImageView(this)
+    fabMenuIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_add_24))
     val rightLowerButton: FloatingActionButton = FloatingActionButton.Builder(this)
-      .setContentView(fabIconNew)
+      .setContentView(fabMenuIcon)
       .build()
 
-    val rLSubBuilder: SubActionButton.Builder = SubActionButton.Builder(this)
-    val rlIcon1 = ImageView(this)
-    val rlIcon2 = ImageView(this)
-    val rlIcon3 = ImageView(this)
-    val rlIcon4 = ImageView(this)
+    val fabSubBuilder: SubActionButton.Builder = SubActionButton.Builder(this)
+    val doneIcon = ImageView(this)
+    val numbersIcon = ImageView(this)
+    val voiceOnOffIcon = ImageView(this)
+    val wifiScanIcon = ImageView(this)
+    val translateIcon = ImageView(this)
+    val informationIcon = ImageView(this)
+    val devModeIcon = ImageView(this)
 
-    rlIcon1.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_chat_light))
-    rlIcon2.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_camera_light))
-    rlIcon3.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_video_light))
-    rlIcon4.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.ic_action_place_light))
+    doneIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_done_24))
+    numbersIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_numbers_24))
+    voiceOnOffIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_volume_up_24))
+    wifiScanIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_perm_scan_wifi_24))
+    translateIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_translate_24))
+    informationIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_info_outline_24))
+    devModeIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_developer_mode_24))
 
     // Build the menu with default options: light theme, 90 degrees, 72dp radius.
-    // Set 4 default SubActionButtons
+    // Set default SubActionButtons
     val rightLowerMenu: FloatingActionMenu = FloatingActionMenu.Builder(this)
-      .addSubActionView(rLSubBuilder.setContentView(rlIcon1).build())
-      .addSubActionView(rLSubBuilder.setContentView(rlIcon2).build())
-      .addSubActionView(rLSubBuilder.setContentView(rlIcon3).build())
-      .addSubActionView(rLSubBuilder.setContentView(rlIcon4).build())
+      .setRadius(600)
+      .addSubActionView(fabSubBuilder.setContentView(doneIcon).build(), 196, 196)
+      .addSubActionView(fabSubBuilder.setContentView(numbersIcon).build(), 196, 196)
+      .addSubActionView(fabSubBuilder.setContentView(voiceOnOffIcon).build(), 196, 196)
+      .addSubActionView(fabSubBuilder.setContentView(wifiScanIcon).build(), 196, 196)
+      .addSubActionView(fabSubBuilder.setContentView(translateIcon).build(), 196, 196)
+      .addSubActionView(fabSubBuilder.setContentView(informationIcon).build(), 196, 196)
+      .addSubActionView(fabSubBuilder.setContentView(devModeIcon).build(), 196, 196)
       .attachTo(rightLowerButton)
       .build()
 
@@ -106,17 +113,17 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     rightLowerMenu.setStateChangeListener(object : FloatingActionMenu.MenuStateChangeListener {
       override fun onMenuOpened(menu: FloatingActionMenu?) {
         // Rotate the icon of rightLowerButton 45 degrees clockwise
-        fabIconNew.rotation = 0f
+        fabMenuIcon.rotation = 0f
         val pvhR = PropertyValuesHolder.ofFloat(View.ROTATION, 45f)
-        val animation = ObjectAnimator.ofPropertyValuesHolder(fabIconNew, pvhR)
+        val animation = ObjectAnimator.ofPropertyValuesHolder(fabMenuIcon, pvhR)
         animation.start()
       }
 
       override fun onMenuClosed(menu: FloatingActionMenu?) {
         // Rotate the icon of rightLowerButton 45 degrees counter-clockwise
-        fabIconNew.rotation = 45f
+        fabMenuIcon.rotation = 45f
         val pvhR = PropertyValuesHolder.ofFloat(View.ROTATION, 0f)
-        val animation = ObjectAnimator.ofPropertyValuesHolder(fabIconNew, pvhR)
+        val animation = ObjectAnimator.ofPropertyValuesHolder(fabMenuIcon, pvhR)
         animation.start()
       }
     })
