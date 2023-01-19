@@ -53,8 +53,10 @@ import java.util.concurrent.TimeUnit
 class TreeWalkGeoActivity : AppCompatActivity() {
   companion object {
     private const val TAG = "TreeWalkGeoActivity"
-    private const val LOCATIONS_FILE_NAME = "locations_v2_2.xml"
-    private const val LOCATIONS_URL = "https://treewalks.github.io/locations.xml"
+    private const val LOCATIONS_FILE_NAME = "locations.xml"
+    private const val LOCATIONS_EN_FILE_NAME = "locations_es.xml"
+    private const val LOCATIONS_ES_FILE_NAME = "locations_en.xml"
+    private const val WEBSITE_URL = "https://treewalks.github.io/"
   }
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
@@ -166,9 +168,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     // Create circular FAB menu
     createCircularFABMenu()
 
-    lifecycle.coroutineScope.launch {
-      downloadLocationsAsync()
-    }
+//    lifecycle.coroutineScope.launch {
+//      downloadLocationsAsync(LOCATIONS_FILE_NAME)
+//      downloadLocationsAsync(LOCATIONS_EN_FILE_NAME)
+//      downloadLocationsAsync(LOCATIONS_ES_FILE_NAME)
+//    }
   }
 
   override fun onDestroy() {
@@ -176,11 +180,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     disposable.dispose()
   }
 
-  private suspend fun downloadLocationsAsync(): Deferred<Int> = coroutineScope {
+  private suspend fun downloadLocationsAsync(fileName: String): Deferred<Int> = coroutineScope {
     async {
-      var cachedFile = File(cacheDir, LOCATIONS_FILE_NAME)
+      var cachedFile = File(cacheDir, fileName)
 
-      disposable = fileDownloader.download(LOCATIONS_URL, cachedFile)
+      disposable = fileDownloader.download(WEBSITE_URL + fileName, cachedFile)
         .throttleFirst(100, TimeUnit.MILLISECONDS)
         .toFlowable(BackpressureStrategy.LATEST)
         .subscribeOn(Schedulers.io())
@@ -189,7 +193,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           Log.i(TAG, "$it% Downloaded")
         }, {
           Log.e(TAG, it.localizedMessage, it)
-          cachedFile = File(cacheDir, LOCATIONS_FILE_NAME)
+          cachedFile = File(cacheDir, fileName)
           renderer.processLocations(cachedFile)
         }, {
           Log.i(TAG, "Download Complete")
