@@ -230,7 +230,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
     // If not tracking, don't draw 3D objects.
     if (camera.trackingState == TrackingState.PAUSED) {
-      activity.view.updateStatusTextString(activity.resources.getString(R.string.calculating))
       return
     }
 
@@ -250,21 +249,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         populating = true
         timer.start()
       }
-
-      val cameraGeospatialPose = earth.cameraGeospatialPose
-      activity.view.mapView?.updateMapPosition(
-        latitude = cameraGeospatialPose.latitude,
-        longitude = cameraGeospatialPose.longitude,
-        heading = cameraGeospatialPose.heading
-      )
-
-      if (BuildConfig.BUILD_TYPE.equals("debug")) {
-        activity.view.updateStatusText(earth, cameraGeospatialPose)
-      } else {
-        activity.view.updateStatusTextString("")
-      }
-    } else if (!BuildConfig.BUILD_TYPE.equals("debug")) {
-      activity.view.updateStatusTextString(activity.resources.getString(R.string.calculating))
     }
 
     // Draw the placed anchors, if they exist.
@@ -396,7 +380,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     // Step 1.2.: place an anchor at the given position.
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
-      activity.view.updateStatusTextString(activity.resources.getString(R.string.calculating))
       populating = false
       return
     }
@@ -420,7 +403,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     }
 
     if (areaIndex < 0) {
-      activity.view.updateStatusTextString(activity.resources.getString(R.string.too_far))
       populating = false
       return
     }
@@ -435,27 +417,10 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     val qz = 0f
     val qw = 1f
 
-    val shouldAddAnchors = earthAnchors.isEmpty()
-    val mapView = activity.view.mapView
-    val shouldAddMarker = mapView != null && mapView.earthMarkers.isEmpty()
-    val infoSnippet = if (shouldAddMarker) activity.resources.getString(R.string.info_snippet) else ""
-    for (location in mapAreas[areaIndex].locationData) {
-      if (shouldAddAnchors) {
+    if (earthAnchors.isEmpty()) {
+      for (location in mapAreas[areaIndex].locationData) {
         earthAnchors.add(earth.resolveAnchorOnTerrain(
           location.gpsLocation.latitude, location.gpsLocation.longitude, HOVER_ABOVE_TERRAIN, qx, qy, qz, qw))
-      }
-
-      if (shouldAddMarker) {
-        mapView?.earthMarkers?.add(mapView.createMarker(
-          if (location.kind == LocationKind.TRASHCAN) mapView.greenMarkerColor else mapView.redMarkerColor,
-          location.gpsLocation.latitude,
-          location.gpsLocation.longitude,
-          location.title,
-          infoSnippet,
-          location.url,
-          true,
-          if (location.kind == LocationKind.TRASHCAN) R.drawable.ic_recycle_white_48dp else R.drawable.ic_map_pin_white_48dp,
-        ))
       }
     }
 
