@@ -68,6 +68,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     )
   }
   private var disposable = Disposables.disposed()
+  private var currentLanguage = DEFAULT_LANGUAGE;
+  private var hasSemanticApi = false;
 
   private fun createCircularFABMenu() {
     // Set up the white button on the lower right corner
@@ -135,6 +137,10 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     RxJavaPlugins.setErrorHandler {
       Log.e("Error", it.localizedMessage ?: "")
     }
+
+    val arCoreVersion: Long = packageManager.getVersionCodeCompat("com.google.ar.core")
+    Log.i(TAG, "ARCore version: $arCoreVersion")
+    hasSemanticApi = arCoreVersion >= 223620091
 
     // Setup ARCore session lifecycle helper and configuration.
     arCoreSessionHelper = ARCoreSessionLifecycleHelper(this)
