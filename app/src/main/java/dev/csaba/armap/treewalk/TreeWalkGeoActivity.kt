@@ -100,17 +100,23 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     // Build the menu with default options: light theme, 90 degrees, 72dp radius.
     // Set default SubActionButtons
-    val rightLowerMenu: FloatingActionMenu = FloatingActionMenu.Builder(this)
+    var circularMenuBuilder: FloatingActionMenu.Builder = FloatingActionMenu.Builder(this)
       .setRadius(600)
       .addSubActionView(fabSubBuilder.setContentView(doneIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(numbersIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(voiceOnOffIcon).build(), 196, 196)
-      .addSubActionView(fabSubBuilder.setContentView(wifiScanIcon).build(), 196, 196)
+
+    if (hasSemanticApi) {
+      circularMenuBuilder = circularMenuBuilder
+        .addSubActionView(fabSubBuilder.setContentView(wifiScanIcon).build(), 196, 196)
+    }
+
+    circularMenuBuilder = circularMenuBuilder
       .addSubActionView(fabSubBuilder.setContentView(translateIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(informationIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(devModeIcon).build(), 196, 196)
-      .attachTo(rightLowerButton)
-      .build()
+
+    val circularMenu: FloatingActionMenu = circularMenuBuilder.attachTo(rightLowerButton).build()
 
     translateIcon.setOnClickListener {
       val builder = AlertDialog.Builder(this)
@@ -141,7 +147,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
 
     // Listen menu open and close events to animate the button content view
-    rightLowerMenu.setStateChangeListener(object : FloatingActionMenu.MenuStateChangeListener {
+    circularMenu.setStateChangeListener(object : FloatingActionMenu.MenuStateChangeListener {
       override fun onMenuOpened(menu: FloatingActionMenu?) {
         // Rotate the icon of rightLowerButton 45 degrees clockwise
         fabMenuIcon.rotation = 0f
