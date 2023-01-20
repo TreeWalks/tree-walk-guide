@@ -39,8 +39,9 @@ import kotlin.Comparator
 import kotlin.math.*
 
 enum class LocationKind {
-  POI,
-  TRASHCAN;
+  GARDEN,
+  TREE,
+  TREES;
 
   companion object {
     fun getByName(name: String) = valueOf(name.uppercase(Locale.getDefault()))
@@ -273,7 +274,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       val lat = locationParts[0].trim().toDouble()
       val lon = locationParts[1].trim().toDouble()
       val title = if (locationParts.size > 2) locationParts[2].trim() else ""
-      val kind = if (locationParts.size > 3) LocationKind.getByName(locationParts[3].trim()) else LocationKind.POI
+      val kind = if (locationParts.size > 3) LocationKind.getByName(locationParts[3].trim()) else LocationKind.GARDEN
       val url = if (locationParts.size > 4) locationParts[4].trim() else ""
       mapArea.locationData.add(
         LocationData(
@@ -443,7 +444,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     val currentTimeMillis = System.currentTimeMillis()
     val transformationMatrix = FloatArray(16)
     val locData = mapAreas[areaIndex].locationData[index]
-    if (locData.kind == LocationKind.TRASHCAN) {
+    if (locData.kind == LocationKind.GARDEN) {  // TODO
       Matrix.setIdentityM(transformationMatrix, 0)
       // Bounce animation follows a half sine wave
       val angleRadian = currentTimeMillis % 1000 * Math.PI / 1000f
@@ -469,9 +470,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     Matrix.multiplyMM(locData.modelViewProjectionMatrix, 0, projectionMatrix, 0, locData.modelViewMatrix, 0)
 
     // Update shader properties and draw
-    val virtualObjectShader = if (locData.kind == LocationKind.TRASHCAN) greenObjectShader else redObjectShader
+    val virtualObjectShader = if (locData.kind == LocationKind.GARDEN) greenObjectShader else redObjectShader
     virtualObjectShader.setMat4("u_ModelViewProjection", locData.modelViewProjectionMatrix)
-    val virtualObjectMesh = if (locData.kind == LocationKind.TRASHCAN) downArrowMesh else mapPinMesh
+    val virtualObjectMesh = if (locData.kind == LocationKind.GARDEN) downArrowMesh else mapPinMesh
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
   }
 
