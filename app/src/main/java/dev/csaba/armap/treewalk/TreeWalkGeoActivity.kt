@@ -57,7 +57,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     private const val LOCATIONS_EN_FILE_NAME = "locations_es.xml"
     private const val LOCATIONS_ES_FILE_NAME = "locations_en.xml"
     private const val WEBSITE_URL = "https://treewalks.github.io/"
-    private const val DEFAULT_LANGUAGE = "en";
+    private const val DEFAULT_LANGUAGE = "en"
   }
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
@@ -69,8 +69,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     )
   }
   private var disposable = Disposables.disposed()
-  private var currentLanguage = DEFAULT_LANGUAGE;
-  private var hasSemanticApi = false;
+  private var currentLanguage = DEFAULT_LANGUAGE
+  private var hasSemanticApi = false
 
   private fun createCircularFABMenu() {
     // Set up the white button on the lower right corner
@@ -121,12 +121,12 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       var selectedLocale = ""
       builder.setSingleChoiceItems(
         languages, checkedItem
-      ) { dialog, which ->
+      ) { _, which ->
         selectedLocale = if (which == 0) "en" else "es"
       }
 
-      builder.setPositiveButton(resources.getString(R.string.apply_action)) { dialog, which ->
-        if (!selectedLocale.equals(currentLanguage)) {
+      builder.setPositiveButton(resources.getString(R.string.apply_action)) { _, _ ->
+        if (selectedLocale != currentLanguage) {
           val localeList = LocaleListCompat.forLanguageTags(selectedLocale)
           AppCompatDelegate.setApplicationLocales(localeList)
         }
@@ -256,7 +256,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
   }
 
-  // Configure the session, setting the desired options according to your usecase.
+  // Configure the session, setting the desired options according to your use case.
   private fun configureSession(session: Session) {
     session.configure(
       session.config.apply {
@@ -276,7 +276,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   ) {
     super.onRequestPermissionsResult(requestCode, permissions, results)
     if (!GeoPermissionsHelper.hasGeoPermissions(this)) {
-      // Use toast instead of snackbar here since the activity will exit.
+      // Use toast instead of snack bar here since the activity will exit.
       Toast.makeText(this, resources.getString(R.string.permissions_needed), Toast.LENGTH_LONG)
         .show()
       if (!GeoPermissionsHelper.shouldShowRequestPermissionRationale(this)) {
