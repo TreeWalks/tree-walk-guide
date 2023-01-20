@@ -27,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.coroutineScope
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
@@ -36,18 +37,13 @@ import com.oguzdev.circularfloatingactionmenu.library.SubActionButton
 import dev.csaba.armap.common.helpers.FullScreenHelper
 import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.treewalk.helpers.*
-import io.reactivex.BackpressureStrategy
-import io.reactivex.android.schedulers.AndroidSchedulers.mainThread
 import io.reactivex.disposables.Disposables
 import io.reactivex.plugins.RxJavaPlugins
-import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import java.io.File
+import java.io.FileReader
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 class TreeWalkGeoActivity : AppCompatActivity() {
@@ -62,6 +58,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
   lateinit var view: TreeWalkGeoView
+  var loaded = false
   private lateinit var renderer: TreeWalkGeoRenderer
   private val fileDownloader by lazy {
     FileDownloader(
@@ -226,11 +223,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     // Create circular FAB menu
     createCircularFABMenu()
 
-//    lifecycle.coroutineScope.launch {
-//      downloadLocationsAsync(LOCATIONS_FILE_NAME)
-//      downloadLocationsAsync(LOCATIONS_EN_FILE_NAME)
-//      downloadLocationsAsync(LOCATIONS_ES_FILE_NAME)
-//    }
+    lifecycle.coroutineScope.launch { downloadAllDataAsync() }
   }
 
   override fun onDestroy() {
@@ -238,28 +231,65 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     disposable.dispose()
   }
 
-  private suspend fun downloadLocationsAsync(fileName: String): Deferred<Int> = coroutineScope {
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private suspend fun downloadAllDataAsync(): Deferred<Unit> = coroutineScope {
     async {
-      var cachedFile = File(cacheDir, fileName)
+      val deferredLocation: Deferred<List<String>> = lifecycle.coroutineScope.async { downloadData(LOCATIONS_FILE_NAME, R.array.locations) }
+      val deferredLocationEn: Deferred<List<String>> = lifecycle.coroutineScope.async { downloadData(LOCATIONS_EN_FILE_NAME, R.array.locations_en) }
+      val deferredLocationEs: Deferred<List<String>> = lifecycle.coroutineScope.async { downloadData(LOCATIONS_ES_FILE_NAME, R.array.locations_es) }
 
-      disposable = fileDownloader.download(WEBSITE_URL + fileName, cachedFile)
-        .throttleFirst(100, TimeUnit.MILLISECONDS)
-        .toFlowable(BackpressureStrategy.LATEST)
-        .subscribeOn(Schedulers.io())
-        .observeOn(mainThread())
-        .subscribe({
-          Log.i(TAG, "$it% Downloaded")
-        }, {
-          Log.e(TAG, it.localizedMessage, it)
-          cachedFile = File(cacheDir, fileName)
-          renderer.processLocations(cachedFile)
-        }, {
-          Log.i(TAG, "Download Complete")
-          renderer.processLocations(cachedFile)
-        })
+      val deferredList = listOf(deferredLocation, deferredLocationEn, deferredLocationEs)
+      deferredList.awaitAll().apply {
+        renderer.processLocations(deferredLocation.getCompleted(), deferredLocationEn.getCompleted(), deferredLocationEs.getCompleted())
+        loaded = true
+      }
 
-      return@async 0
+      return@async
     }
+  }
+
+  private fun processLocationFile(fileContent: String): List<String> {
+    val walkStops: MutableList<String> = emptyList<String>().toMutableList()
+    val walkParts = fileContent.split("<string-array name=\"")
+    if (walkParts.size <= 1) {
+      return walkStops
+    }
+
+    val walkPart = walkParts[1]
+    if (walkPart.indexOf('"') < 0) {
+      return walkStops
+    }
+
+    val itemParts = walkPart.split("<item>")
+    if (itemParts.size <= 1) {
+      return walkStops
+    }
+
+    for (itemPart in itemParts.subList(1, itemParts.size)) {
+      val itemParts2 = itemPart.split("</item>")
+      if (itemParts2.isNotEmpty() && itemParts2.indexOf(",") >= 0) {
+        walkStops.add(itemParts2[0])
+      }
+    }
+
+    return walkStops
+  }
+
+  private fun downloadData(fileName: String, arrayId: Int): List<String> {
+    val cachedFile = File(cacheDir, fileName)
+    val length = fileDownloader.download(WEBSITE_URL + fileName, cachedFile)
+    val stringList: List<String>
+
+    if (!cachedFile.exists() || length <= 0) {
+      Log.w(TAG, "Unsuccessful file caching of ${cachedFile.path}")
+      stringList = resources.getStringArray(arrayId).toList()
+    } else {
+      val reader = FileReader(cachedFile)
+      stringList = processLocationFile(reader.readText())
+      reader.close()
+    }
+
+    return stringList
   }
 
   // Configure the session, setting the desired options according to your use case.
