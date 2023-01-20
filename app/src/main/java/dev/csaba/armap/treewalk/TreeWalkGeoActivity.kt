@@ -22,33 +22,33 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.coroutineScope
-import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton
-import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu
-import com.oguzdev.circularfloatingactionmenu.library.SubActionButton
+import androidx.core.os.LocaleListCompat
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
+import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton
+import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu
+import com.oguzdev.circularfloatingactionmenu.library.SubActionButton
 import dev.csaba.armap.common.helpers.FullScreenHelper
 import dev.csaba.armap.common.samplerender.SampleRender
-import dev.csaba.armap.treewalk.helpers.ARCoreSessionLifecycleHelper
-import dev.csaba.armap.treewalk.helpers.FileDownloader
-import dev.csaba.armap.treewalk.helpers.GeoPermissionsHelper
-import dev.csaba.armap.treewalk.helpers.TreeWalkGeoView
+import dev.csaba.armap.treewalk.helpers.*
 import io.reactivex.BackpressureStrategy
-import io.reactivex.android.schedulers.AndroidSchedulers.*
+import io.reactivex.android.schedulers.AndroidSchedulers.mainThread
 import io.reactivex.disposables.Disposables
 import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.io.File
+import java.util.*
 import java.util.concurrent.TimeUnit
+
 
 class TreeWalkGeoActivity : AppCompatActivity() {
   companion object {
@@ -57,6 +57,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     private const val LOCATIONS_EN_FILE_NAME = "locations_es.xml"
     private const val LOCATIONS_ES_FILE_NAME = "locations_en.xml"
     private const val WEBSITE_URL = "https://treewalks.github.io/"
+    private const val DEFAULT_LANGUAGE = "en";
   }
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
@@ -111,6 +112,34 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       .attachTo(rightLowerButton)
       .build()
 
+    translateIcon.setOnClickListener {
+      val builder = AlertDialog.Builder(this)
+      builder.setTitle(resources.getString(R.string.select_language))
+      val languages = arrayOf(resources.getString(R.string.language_english), resources.getString(R.string.language_spanish))
+      val checkedItem = if (currentLanguage == "en") 0 else 1
+
+      var selectedLocale = ""
+      builder.setSingleChoiceItems(
+        languages, checkedItem
+      ) { dialog, which ->
+        selectedLocale = if (which == 0) "en" else "es"
+      }
+
+      builder.setPositiveButton(resources.getString(R.string.apply_action)) { dialog, which ->
+        if (!selectedLocale.equals(currentLanguage)) {
+          val localeList = LocaleListCompat.forLanguageTags(selectedLocale)
+          AppCompatDelegate.setApplicationLocales(localeList)
+        }
+      }
+
+      builder.setNegativeButton(resources.getString(R.string.cancel_action), null)
+      builder.show()
+    }
+
+    devModeIcon.setOnClickListener {
+      view.snackbarHelper.showMessage(this, "Dev Mode!")
+    }
+
     // Listen menu open and close events to animate the button content view
     rightLowerMenu.setStateChangeListener(object : FloatingActionMenu.MenuStateChangeListener {
       override fun onMenuOpened(menu: FloatingActionMenu?) {
@@ -139,7 +168,6 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
 
     val arCoreVersion: Long = packageManager.getVersionCodeCompat("com.google.ar.core")
-    Log.i(TAG, "ARCore version: $arCoreVersion")
     hasSemanticApi = arCoreVersion >= 223620091
 
     // Setup ARCore session lifecycle helper and configuration.
@@ -177,6 +205,17 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     // Sets up an example renderer using our TreeWalkGeoRenderer.
     SampleRender(view.surfaceView, renderer, assets)
+
+    // https://github.com/android/user-interface-samples/tree/main/PerAppLanguages
+    // https://android-developers.googleblog.com/2022/11/per-app-language-preferences-part-1.html
+    // Fetching the current application locale using the AndroidX support Library
+    currentLanguage = if (!AppCompatDelegate.getApplicationLocales().isEmpty) {
+      // Fetches the current Application Locale from the list
+      AppCompatDelegate.getApplicationLocales()[0]?.language ?: DEFAULT_LANGUAGE
+    } else {
+      // Fetches the default System Locale
+      Locale.getDefault().language
+    }
 
     // Create circular FAB menu
     createCircularFABMenu()

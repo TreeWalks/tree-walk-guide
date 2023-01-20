@@ -1,19 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-   Copyright 2022 Google LLC
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
--->
 <resources>
   <string translatable="false" name="app_name">Tree Walk Guide</string>
   <string name="permissions_needed">Camera and location permissions are needed to run this application</string>
@@ -23,4 +8,12 @@
   <string name="no_ar_support">This device does not support AR</string>
   <string name="camera_not_available">Camera not available. Try restarting the app.</string>
   <string name="ar_core_exception">Failed to create AR session: %1$s</string>
+  <string name="welcome">Welcome to Tree Walk guide!</string>
+  <string name="stop_done">Tap on the map pin of the stop or select the checkmark menu to acknowledge visitation!</string>
+  <string name="plant_watering">Tap on plants to virtually water them within geofence area marked by the green posts to gather extra points. Select the scan symbol menu to reveal which plants count.</string>
+  <string name="select_language">Select a language</string>
+  <string name="language_english">English</string>
+  <string name="language_spanish">Spanish</string>
+  <string name="apply_action">Apply</string>
+  <string name="cancel_action">Cancel</string>
 </resources>
