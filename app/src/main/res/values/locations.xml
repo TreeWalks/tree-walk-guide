@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string-array name="tree_walk">
+  <string-array name="locations">
     <item>36.813088|-119.748385|36.813211|-119.748566|36.812939|-119.748217|garden||</item>
     <item>36.81323|-119.74726|36.813665|-119.747167|36.812949|-119.746979|tree|100|</item>
     <item>36.81372|-119.74651|36.81379|-119.746726|36.813643|-119.746318|garden||</item>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string-array name="tree_walk_en">
+  <string-array name="locations_en">
     <item>Green Space 1|A perfect green space to start and end the walk|This green space has several interesting trees and plants around. We selected this space because there’s seating available and there are rest rooms close by as well, so it’s ideal to take a break after or before the walk.|https://treewalks.github.io//2022/12/01/green_space_1_en.html</item>
     <item>Thread palm|Evergreen, native to northern Mexico, drought tolerant|Evergreen. Native to northern Mexico. Slender, tapering trunk. Fan-shaped, deeply lobed leaves. Light pink flowers in long inflorescences produce copious quantities of seeds. Drought tolerant.|https://treewalks.github.io//2022/12/02/thread_palm_en.html</item>
     <item>Green Space 2|A green space at the heart of Agricultural Sciences|This is another cool green space with interesting plants and trees surrounded by the Agricultural Sciences Building. The building has also several plated planted specimen around it.|https://treewalks.github.io//2022/12/03/green_space_2_en.html</item>

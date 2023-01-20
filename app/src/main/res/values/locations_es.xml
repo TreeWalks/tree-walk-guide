@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string-array name="tree_walk_es">
+  <string-array name="locations_es">
     <item>Espacio Verde 1|Un espacio verde perfecto para empezar y terminar el paseo|Este espacio verde tiene varios árboles y plantas interesantes alrededor. Elegimos este espacio porque hay asientos disponibles y también hay baños cerca, por lo que es ideal para tomar un descanso después o antes de la caminata.|https://treewalks.github.io//2022/12/01/green_space_1_es.html</item>
     <item>Palma de hilo|Perennifolio, nativo del norte de México, tolerante a la sequía|Hojas perennes. Originaria del norte de México. Tronco delgado y ahusado. Hojas en forma de abanico, profundamente lobuladas. Las flores de color rosa claro en inflorescencias largas producen grandes cantidades de semillas. Tolerante a la sequía.|https://treewalks.github.io//2022/12/02/thread_palm_es.html</item>
     <item>Espacio verde 2|Un espacio verde en el corazón de las Ciencias Agrarias|Este es otro espacio verde fresco con plantas y árboles interesantes rodeado por el Edificio de Ciencias Agrícolas. El edificio también tiene varios ejemplares plantados enchapados a su alrededor.|https://treewalks.github.io//2022/12/03/green_space_2_es.html</item>
