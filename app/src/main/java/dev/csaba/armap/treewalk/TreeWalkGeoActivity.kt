@@ -273,7 +273,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     initGoogleClientAndSignin()
 
-    lifecycle.coroutineScope.launch { downloadAllDataAsync() }
+    lifecycle.coroutineScope.launch(Dispatchers.IO) { downloadAllDataAsync() }
   }
 
   override fun onPause() {
@@ -290,13 +290,23 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   @OptIn(ExperimentalCoroutinesApi::class)
   private suspend fun downloadAllDataAsync(): Deferred<Unit> = coroutineScope {
     async {
-      val deferredLocation: Deferred<List<String>> = lifecycle.coroutineScope.async { downloadData(LOCATIONS_FILE_NAME, R.array.locations) }
-      val deferredLocationEn: Deferred<List<String>> = lifecycle.coroutineScope.async { downloadData(LOCATIONS_EN_FILE_NAME, R.array.locations_en) }
-      val deferredLocationEs: Deferred<List<String>> = lifecycle.coroutineScope.async { downloadData(LOCATIONS_ES_FILE_NAME, R.array.locations_es) }
+      val deferredLocation: Deferred<List<String>> = lifecycle.coroutineScope.async(Dispatchers.IO) {
+        downloadData(LOCATIONS_FILE_NAME, R.array.locations)
+      }
+      val deferredLocationEn: Deferred<List<String>> = lifecycle.coroutineScope.async(Dispatchers.IO) {
+        downloadData(LOCATIONS_EN_FILE_NAME, R.array.locations_en)
+      }
+      val deferredLocationEs: Deferred<List<String>> = lifecycle.coroutineScope.async(Dispatchers.IO) {
+        downloadData(LOCATIONS_ES_FILE_NAME, R.array.locations_es)
+      }
 
       val deferredList = listOf(deferredLocation, deferredLocationEn, deferredLocationEs)
       deferredList.awaitAll().apply {
-        renderer.processLocations(deferredLocation.getCompleted(), deferredLocationEn.getCompleted(), deferredLocationEs.getCompleted())
+        renderer.processLocations(
+          deferredLocation.getCompleted(),
+          deferredLocationEn.getCompleted(),
+          deferredLocationEs.getCompleted()
+        )
       }
 
       return@async
