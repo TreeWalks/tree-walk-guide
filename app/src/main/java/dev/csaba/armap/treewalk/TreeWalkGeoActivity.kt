@@ -18,6 +18,7 @@ package dev.csaba.armap.treewalk
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
@@ -72,8 +73,18 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     )
   }
   private var disposable = Disposables.disposed()
+  private var currentLocale = Locale.US
+    set(value) {
+      field = value
+      textToSpeech?.language = value
+    }
   private var currentLanguage = DEFAULT_LANGUAGE
+    set(value) {
+      field = value
+      currentLocale = Locale.forLanguageTag(value)
+    }
   private var hasSemanticApi = false
+  private var textToSpeech: TextToSpeech? = null
   private var googleSignInClient: GoogleSignInClient? = null
   private var achievementClient: AchievementsClient? = null
   private var leaderboardsClient: LeaderboardsClient? = null
@@ -190,6 +201,19 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
   }
 
+  private fun perAppLanguageInit() {
+    // https://github.com/android/user-interface-samples/tree/main/PerAppLanguages
+    // https://android-developers.googleblog.com/2022/11/per-app-language-preferences-part-1.html
+    // Fetching the current application locale using the AndroidX support Library
+    currentLanguage = if (!AppCompatDelegate.getApplicationLocales().isEmpty) {
+      // Fetches the current Application Locale from the list
+      AppCompatDelegate.getApplicationLocales()[0]?.language ?: DEFAULT_LANGUAGE
+    } else {
+      // Fetches the default System Locale
+      Locale.getDefault().language
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
@@ -236,15 +260,12 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     // Sets up an example renderer using our TreeWalkGeoRenderer.
     SampleRender(view.surfaceView, renderer, assets)
 
-    // https://github.com/android/user-interface-samples/tree/main/PerAppLanguages
-    // https://android-developers.googleblog.com/2022/11/per-app-language-preferences-part-1.html
-    // Fetching the current application locale using the AndroidX support Library
-    currentLanguage = if (!AppCompatDelegate.getApplicationLocales().isEmpty) {
-      // Fetches the current Application Locale from the list
-      AppCompatDelegate.getApplicationLocales()[0]?.language ?: DEFAULT_LANGUAGE
-    } else {
-      // Fetches the default System Locale
-      Locale.getDefault().language
+    perAppLanguageInit()
+
+    textToSpeech = TextToSpeech(applicationContext) { status ->
+      if (status != TextToSpeech.ERROR) {
+        textToSpeech?.language = currentLocale
+      }
     }
 
     // Create circular FAB menu
@@ -270,7 +291,6 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       val deferredList = listOf(deferredLocation, deferredLocationEn, deferredLocationEs)
       deferredList.awaitAll().apply {
         renderer.processLocations(deferredLocation.getCompleted(), deferredLocationEn.getCompleted(), deferredLocationEs.getCompleted())
-        loaded = true
       }
 
       return@async
@@ -403,5 +423,9 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
   fun submitScore() {
     leaderboardsClient?.submitScore(getString(R.string.leaderboard_tree_walk), score)
+  }
+
+  fun speak(text: String) {
+    textToSpeech?.speak(text,TextToSpeech.QUEUE_FLUSH, null, null)
   }
 }
