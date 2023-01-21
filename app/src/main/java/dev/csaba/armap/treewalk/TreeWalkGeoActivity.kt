@@ -184,7 +184,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     })
   }
 
-  fun initGoogleClientAndSignin() {
+  private fun initGoogleClientAndSignin() {
     googleSignInClient = GoogleSignIn.getClient(this,
       GoogleSignInOptions.Builder(
         GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN).build())
