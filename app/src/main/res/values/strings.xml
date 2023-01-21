@@ -12,8 +12,8 @@
   <string name="stop_done">Tap on the map pin of the stop or select the checkmark menu to acknowledge visitation!</string>
   <string name="plant_watering">Tap on plants to virtually water them within geofence area marked by the green posts to gather extra points. Select the scan symbol menu to reveal which plants count.</string>
   <string name="select_language">Select a language</string>
-  <string name="language_english">English</string>
-  <string name="language_spanish">Spanish</string>
+  <string name="language_english">🇺🇸 English</string>
+  <string name="language_spanish">🇪🇸 Spanish</string>
   <string name="apply_action">Apply</string>
   <string name="cancel_action">Cancel</string>
   <string name="move_closer">Move closer to the marker then tap again</string>

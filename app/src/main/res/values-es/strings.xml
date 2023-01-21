@@ -27,8 +27,8 @@
   <string name="stop_done">¡Toque el pin del mapa de la parada o seleccione el menú de marca de verificación para reconocer la visita!</string>
   <string name="plant_watering">Tap on plants to virtually water them within geofence area marked by the green posts to gather extra points. Select the scan symbol menu to reveal which plants count.</string>
   <string name="select_language">Selecciona un idioma</string>
-  <string name="language_english">Inglés</string>
-  <string name="language_spanish">Español</string>
+  <string name="language_english">🇺🇸 Inglés</string>
+  <string name="language_spanish">🇪🇸 Español</string>
   <string name="apply_action">Aplicar</string>
   <string name="cancel_action">Cancelar</string>
   <string name="move_closer">Acérquese al marcador y luego toque de nuevo</string>
