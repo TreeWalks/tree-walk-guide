@@ -28,6 +28,12 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.coroutineScope
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.games.AchievementsClient
+import com.google.android.gms.games.LeaderboardsClient
+import com.google.android.gms.games.PlayGames
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
@@ -68,6 +74,10 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   private var disposable = Disposables.disposed()
   private var currentLanguage = DEFAULT_LANGUAGE
   private var hasSemanticApi = false
+  private var googleSignInClient: GoogleSignInClient? = null
+  private var achievementClient: AchievementsClient? = null
+  private var leaderboardsClient: LeaderboardsClient? = null
+  private var score = 0L
 
   private fun createCircularFABMenu() {
     // Set up the white button on the lower right corner
@@ -163,6 +173,23 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     })
   }
 
+  fun initGoogleClientAndSignin() {
+    googleSignInClient = GoogleSignIn.getClient(this,
+      GoogleSignInOptions.Builder(
+        GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN).build())
+
+    googleSignInClient?.silentSignIn()?.addOnCompleteListener {
+      if (it.isSuccessful) {
+        achievementClient = PlayGames.getAchievementsClient(this)
+        leaderboardsClient = PlayGames.getLeaderboardsClient(this)
+      } else {
+        Log.e(TAG, "signInError", it.exception)
+      }
+    }?.addOnFailureListener {
+      Log.e(TAG, "signInFailure", it)
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
@@ -222,6 +249,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     // Create circular FAB menu
     createCircularFABMenu()
+
+    initGoogleClientAndSignin()
 
     lifecycle.coroutineScope.launch { downloadAllDataAsync() }
   }
@@ -326,5 +355,53 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   override fun onWindowFocusChanged(hasFocus: Boolean) {
     super.onWindowFocusChanged(hasFocus)
     FullScreenHelper.setFullScreenOnWindowFocusChanged(this, hasFocus)
+  }
+
+  fun showAchievements() {
+    achievementClient?.achievementsIntent?.addOnSuccessListener { intent ->
+      startActivityForResult(intent, 0)
+    }
+  }
+
+  fun showTopPlayers() {
+    leaderboardsClient?.allLeaderboardsIntent?.addOnSuccessListener {intent ->
+      startActivityForResult(intent, 0)
+    }
+  }
+
+  fun unlockAchievement(stopIndex: Int) {
+    val achievementId = when (stopIndex) {
+      0 -> R.string.achievement_stop_1_visited
+      1 -> R.string.achievement_stop_2_visited
+      2 -> R.string.achievement_stop_3_visited
+      3 -> R.string.achievement_stop_4_visited
+      4 -> R.string.achievement_stop_5_visited
+      5 -> R.string.achievement_stop_6_visited
+      6 -> R.string.achievement_stop_7_visited
+      7 -> R.string.achievement_stop_8_visited
+      8 -> R.string.achievement_stop_9_visited
+      9 -> R.string.achievement_stop_10_visited
+      10 -> R.string.achievement_stop_11_visited
+      11 -> R.string.achievement_stop_12_visited
+      12 -> R.string.achievement_stop_13_visited
+      13 -> R.string.achievement_stop_14_visited
+      14 -> R.string.achievement_stop_15_visited
+      15 -> R.string.achievement_stop_16_visited
+      16 -> R.string.achievement_stop_17_visited
+      17 -> R.string.achievement_stop_18_visited
+      18 -> R.string.achievement_stop_19_visited
+      19 -> R.string.achievement_stop_20_visited
+      20 -> R.string.achievement_stop_21_visited
+      21 -> R.string.achievement_stop_22_visited
+      22 -> R.string.achievement_stop_23_visited
+      23 -> R.string.achievement_stop_24_visited
+      else -> R.string.achievement_stop_1_visited
+    }
+    achievementClient?.unlock(getString(achievementId))
+    score += 1000
+  }
+
+  fun submitScore() {
+    leaderboardsClient?.submitScore(getString(R.string.leaderboard_tree_walk), score)
   }
 }

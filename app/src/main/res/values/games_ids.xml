@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Google Play game services IDs. Save this file as res/values/games-ids.xml in your project.-->
+<resources>
+    <!--app_id-->
+    <string name="app_id" translatable="false">836634717415</string>
+    <!--package_name-->
+    <string name="package_name" translatable="false">dev.csaba.armap.treewalk</string>
+    <!--achievement Stop 1 visited-->
+    <string name="achievement_stop_1_visited" translatable="false">CgkI59nC2qwYEAIQAQ</string>
+    <!--achievement Stop 2 visited-->
+    <string name="achievement_stop_2_visited" translatable="false">CgkI59nC2qwYEAIQAg</string>
+    <!--achievement Stop 3 visited-->
+    <string name="achievement_stop_3_visited" translatable="false">CgkI59nC2qwYEAIQAw</string>
+    <!--achievement Stop 4 visited-->
+    <string name="achievement_stop_4_visited" translatable="false">CgkI59nC2qwYEAIQBA</string>
+    <!--achievement Stop 5 visited-->
+    <string name="achievement_stop_5_visited" translatable="false">CgkI59nC2qwYEAIQBQ</string>
+    <!--achievement Stop 6 visited-->
+    <string name="achievement_stop_6_visited" translatable="false">CgkI59nC2qwYEAIQBg</string>
+    <!--achievement Stop 7 visited-->
+    <string name="achievement_stop_7_visited" translatable="false">CgkI59nC2qwYEAIQBw</string>
+    <!--achievement Stop 8 visited-->
+    <string name="achievement_stop_8_visited" translatable="false">CgkI59nC2qwYEAIQCA</string>
+    <!--achievement Stop 9 visited-->
+    <string name="achievement_stop_9_visited" translatable="false">CgkI59nC2qwYEAIQCQ</string>
+    <!--achievement Stop 10 visited-->
+    <string name="achievement_stop_10_visited" translatable="false">CgkI59nC2qwYEAIQCg</string>
+    <!--achievement Stop 11 visited-->
+    <string name="achievement_stop_11_visited" translatable="false">CgkI59nC2qwYEAIQCw</string>
+    <!--achievement Stop 12 visited-->
+    <string name="achievement_stop_12_visited" translatable="false">CgkI59nC2qwYEAIQDA</string>
+    <!--achievement Stop 13 visited-->
+    <string name="achievement_stop_13_visited" translatable="false">CgkI59nC2qwYEAIQDQ</string>
+    <!--achievement Stop 14 visited-->
+    <string name="achievement_stop_14_visited" translatable="false">CgkI59nC2qwYEAIQDg</string>
+    <!--achievement Stop 15 visited-->
+    <string name="achievement_stop_15_visited" translatable="false">CgkI59nC2qwYEAIQDw</string>
+    <!--achievement Stop 16 visited-->
+    <string name="achievement_stop_16_visited" translatable="false">CgkI59nC2qwYEAIQEA</string>
+    <!--achievement Stop 17 visited-->
+    <string name="achievement_stop_17_visited" translatable="false">CgkI59nC2qwYEAIQEQ</string>
+    <!--achievement Stop 18 visited-->
+    <string name="achievement_stop_18_visited" translatable="false">CgkI59nC2qwYEAIQEg</string>
+    <!--achievement Stop 19 visited-->
+    <string name="achievement_stop_19_visited" translatable="false">CgkI59nC2qwYEAIQEw</string>
+    <!--achievement Stop 20 visited-->
+    <string name="achievement_stop_20_visited" translatable="false">CgkI59nC2qwYEAIQFA</string>
+    <!--achievement Stop 21 visited-->
+    <string name="achievement_stop_21_visited" translatable="false">CgkI59nC2qwYEAIQFQ</string>
+    <!--achievement Stop 22 visited-->
+    <string name="achievement_stop_22_visited" translatable="false">CgkI59nC2qwYEAIQFg</string>
+    <!--achievement Stop 23 visited-->
+    <string name="achievement_stop_23_visited" translatable="false">CgkI59nC2qwYEAIQFw</string>
+    <!--achievement Stop 24 visited-->
+    <string name="achievement_stop_24_visited" translatable="false">CgkI59nC2qwYEAIQGA</string>
+    <!--leaderboard Tree Walk-->
+    <string name="leaderboard_tree_walk" translatable="false">CgkI59nC2qwYEAIQGQ</string>
+</resources>
