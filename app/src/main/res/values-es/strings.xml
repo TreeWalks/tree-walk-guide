@@ -31,4 +31,7 @@
   <string name="language_spanish">Español</string>
   <string name="apply_action">Aplicar</string>
   <string name="cancel_action">Cancelar</string>
+  <string name="move_closer">Acérquese al marcador y luego toque de nuevo</string>
+  <string name="face_the_marker">Mire hacia el marcador y luego toque de nuevo</string>
+  <string name="move_closer_and_face_the_marker">Acérquese y mire hacia el marcador, luego toque nuevamente</string>
 </resources>
