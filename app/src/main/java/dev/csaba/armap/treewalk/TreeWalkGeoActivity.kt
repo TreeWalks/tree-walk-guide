@@ -276,8 +276,14 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     lifecycle.coroutineScope.launch { downloadAllDataAsync() }
   }
 
+  override fun onPause() {
+    super.onPause()
+    textToSpeech?.stop()
+  }
+
   override fun onDestroy() {
     super.onDestroy()
+    textToSpeech?.shutdown();
     disposable.dispose()
   }
 
