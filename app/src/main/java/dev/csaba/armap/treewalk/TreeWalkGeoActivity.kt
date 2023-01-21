@@ -366,13 +366,24 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   // Configure the session, setting the desired options according to your use case.
   private fun configureSession(session: Session) {
     session.configure(
-      session.config.apply {
-        // Enable Geospatial Mode.
-        geospatialMode = Config.GeospatialMode.ENABLED
-        // This finding mode is probably the default
-        // https://developers.google.com/ar/develop/java/geospatial/terrain-anchors
-        planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-      }
+      if (hasSemanticApi)
+        session.config.apply {
+          // Enable Geospatial Mode.
+          geospatialMode = Config.GeospatialMode.ENABLED
+          // This finding mode is probably the default
+          // https://developers.google.com/ar/develop/java/geospatial/terrain-anchors
+          planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+          // https://developers.google.com/ar/geospatial-api-challenge/semantics-api/java
+          semanticsMode = Config.SemanticsMode.ENABLED
+        }
+      else
+        session.config.apply {
+          // Enable Geospatial Mode.
+          geospatialMode = Config.GeospatialMode.ENABLED
+          // This finding mode is probably the default
+          // https://developers.google.com/ar/develop/java/geospatial/terrain-anchors
+          planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+        }
     )
   }
 
