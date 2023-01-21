@@ -342,9 +342,15 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
   private fun downloadData(fileName: String, arrayId: Int): List<String> {
     val cachedFile = File(cacheDir, fileName)
-    val length = fileDownloader.download(WEBSITE_URL + fileName, cachedFile)
-    val stringList: List<String>
+    var length = 0L
+    try {
+      length = fileDownloader.download(WEBSITE_URL + fileName, cachedFile)
+    }
+    catch (e: Exception) {
+      Log.e(TAG, "file download error with $fileName", e)
+    }
 
+    val stringList: List<String>
     if (!cachedFile.exists() || length <= 0) {
       Log.w(TAG, "Unsuccessful file caching of ${cachedFile.path}")
       stringList = resources.getStringArray(arrayId).toList()
