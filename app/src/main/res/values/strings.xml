@@ -25,4 +25,10 @@
   <string name="tap_closer">Tap closer to the marker</string>
   <string name="geofence_area">Stand within the area marked by the green posts while watering</string>
   <string name="tap_a_tree">Click closer to a tree for watering</string>
+  <string name="companion_website">Companion website</string>
+  <string name="companion_website_navigate">Open the companion website</string>
+  <string name="speech_helper">Narrator helper</string>
+  <string name="speech_helper_desc">The application speaks out about actions, instructions, and information</string>
+  <string name="local_test">Local testing</string>
+  <string name="local_test_desc">Populate walk stops around the user for testing purposes</string>
 </resources>

@@ -17,6 +17,7 @@ package dev.csaba.armap.treewalk
 
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -60,7 +61,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     private const val LOCATIONS_FILE_NAME = "locations.xml"
     private const val LOCATIONS_EN_FILE_NAME = "locations_es.xml"
     private const val LOCATIONS_ES_FILE_NAME = "locations_en.xml"
-    private const val WEBSITE_URL = "https://treewalks.github.io/"
+    const val WEBSITE_URL = "https://treewalks.github.io/"
     private const val DEFAULT_LANGUAGE = "en"
   }
 
@@ -127,41 +128,28 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       .build()
 
     val fabSubBuilder: SubActionButton.Builder = SubActionButton.Builder(this)
-    val doneIcon = ImageView(this)
     val numbersIcon = ImageView(this)
-    val voiceOnOffIcon = ImageView(this)
-    val wifiScanIcon = ImageView(this)
+    val waterDropIcon = ImageView(this)
     val translateIcon = ImageView(this)
     val informationIcon = ImageView(this)
-    val devModeIcon = ImageView(this)
+    val settingsIcon = ImageView(this)
 
-    doneIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_done_24))
     numbersIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_numbers_24))
-    voiceOnOffIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_volume_up_24))
-    wifiScanIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_perm_scan_wifi_24))
+    waterDropIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_perm_scan_wifi_24))
     translateIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_translate_24))
     informationIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_info_outline_24))
-    devModeIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_developer_mode_24))
+    settingsIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_settings_24))
 
     // Build the menu with default options: light theme, 90 degrees, 72dp radius.
     // Set default SubActionButtons
-    var circularMenuBuilder: FloatingActionMenu.Builder = FloatingActionMenu.Builder(this)
-      .setRadius(600)
-      .addSubActionView(fabSubBuilder.setContentView(doneIcon).build(), 196, 196)
+    val circularMenu: FloatingActionMenu = FloatingActionMenu.Builder(this)
+      .setRadius(500)
       .addSubActionView(fabSubBuilder.setContentView(numbersIcon).build(), 196, 196)
-      .addSubActionView(fabSubBuilder.setContentView(voiceOnOffIcon).build(), 196, 196)
-
-    if (hasSemanticApi) {
-      circularMenuBuilder = circularMenuBuilder
-        .addSubActionView(fabSubBuilder.setContentView(wifiScanIcon).build(), 196, 196)
-    }
-
-    circularMenuBuilder = circularMenuBuilder
+      .addSubActionView(fabSubBuilder.setContentView(waterDropIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(translateIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(informationIcon).build(), 196, 196)
-      .addSubActionView(fabSubBuilder.setContentView(devModeIcon).build(), 196, 196)
-
-    val circularMenu: FloatingActionMenu = circularMenuBuilder.attachTo(rightLowerButton).build()
+      .addSubActionView(fabSubBuilder.setContentView(settingsIcon).build(), 196, 196)
+      .attachTo(rightLowerButton).build()
 
     translateIcon.setOnClickListener {
       val builder = AlertDialog.Builder(this)
@@ -187,8 +175,10 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       builder.show()
     }
 
-    devModeIcon.setOnClickListener {
-      view.snackbarHelper.showMessage(this, "Dev Mode!")
+    settingsIcon.setOnClickListener {
+      // Intent to open settings activity.
+      val settingsIntent = Intent(this, SettingsActivity::class.java)
+      startActivity(settingsIntent)
     }
 
     // Listen menu open and close events to animate the button content view

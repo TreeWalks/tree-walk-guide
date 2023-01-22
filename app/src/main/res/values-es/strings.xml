@@ -40,4 +40,10 @@
   <string name="tap_closer">Mire hacia el marcador y luego toque de nuevo</string>
   <string name="geofence_area">Párese dentro del área marcada por los postes verdes mientras riega</string>
   <string name="tap_a_tree">Haga clic más cerca de un árbol para regar</string>
+  <string name="companion_website">Sitio web complementario</string>
+  <string name="companion_website_navigate">Abra el sitio web complementario</string>
+  <string name="speech_helper">Ayudante de narrador</string>
+  <string name="speech_helper_desc">La aplicación lee acciones, instrucciones e información</string>
+  <string name="local_test">Pruebas locales</string>
+  <string name="local_test_desc">Llene las paradas para caminar alrededor del usuario con fines de prueba</string>
 </resources>

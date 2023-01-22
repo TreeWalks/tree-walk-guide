@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SettingsFragment">
+
+    <SwitchPreferenceCompat
+        app:key="speech_helper"
+        app:title="@string/speech_helper"
+        app:summary="@string/speech_helper_desc"
+        android:icon="@drawable/baseline_volume_up_24"/>
+
+    <SwitchPreferenceCompat
+        app:key="test_mode"
+        app:title="@string/local_test"
+        app:summary="@string/local_test_desc"
+        android:icon="@drawable/baseline_developer_mode_24"/>
+
+    <Preference
+        android:key="connect_button"
+        android:persistent="false"
+        android:title="@string/companion_website"
+        android:summary="@string/companion_website_navigate"
+        android:icon="@drawable/baseline_open_in_new_24"/>
+
+</PreferenceScreen>
