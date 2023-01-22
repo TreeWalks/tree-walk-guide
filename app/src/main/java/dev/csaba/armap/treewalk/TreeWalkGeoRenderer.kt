@@ -216,6 +216,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         // TODO: how to rotate the directional help arrow
         //  arrowModel.anchor = session.createAnchor(cameraPose)
       } else if (activity.appState == AppState.WATERING_TREES) {
+        // Mostly SceneView unfortunately:
+        // https://stackoverflow.com/a/59662629/292502
+        // https://stackoverflow.com/a/55556746/292502
         wateringCanModel.anchor = session.createAnchor(cameraPose.compose(Pose.makeTranslation(0f, -0.5f, -0.3f)))
         render.renderObject(wateringCanModel, rotate=false, bounce=false)
       }
