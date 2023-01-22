@@ -25,7 +25,7 @@
   <string name="ar_core_exception">Failed to create AR session: %1$s</string>
   <string name="welcome">¡Bienvenido a la guía Tree Walk!</string>
   <string name="stop_done">¡Toque el pin del mapa de la parada o seleccione el menú de marca de verificación para reconocer la visita!</string>
-  <string name="plant_watering">Tap on plants to virtually water them within geofence area marked by the green posts to gather extra points. Select the scan symbol menu to reveal which plants count.</string>
+  <string name="tree_watering">Toque los árboles para regarlos virtualmente dentro del área de la geocerca marcada por los postes verdes para acumular puntos adicionales</string>
   <string name="select_language">Selecciona un idioma</string>
   <string name="language_english">🇺🇸 Inglés</string>
   <string name="language_spanish">🇪🇸 Español</string>
@@ -37,13 +37,16 @@
   <string name="already_visited">Ya visitaste este lugar</string>
   <string name="try_again">Inténtalo de nuevo</string>
   <string name="move_closer">Acérquese al marcador y luego toque de nuevo</string>
-  <string name="tap_closer">Mire hacia el marcador y luego toque de nuevo</string>
+  <string name="click_closer">Haga clic más cerca del marcador</string>
   <string name="geofence_area">Párese dentro del área marcada por los postes verdes mientras riega</string>
-  <string name="tap_a_tree">Haga clic más cerca de un árbol para regar</string>
+  <string name="click_a_tree">Haga clic más cerca de un árbol para regar</string>
   <string name="companion_website">Sitio web complementario</string>
   <string name="companion_website_navigate">Abra el sitio web complementario</string>
   <string name="speech_helper">Ayudante de narrador</string>
   <string name="speech_helper_desc">La aplicación lee acciones, instrucciones e información</string>
   <string name="local_test">Pruebas locales</string>
   <string name="local_test_desc">Llene las paradas para caminar alrededor del usuario con fines de prueba</string>
+  <string name="move_to_next_stop">¡Buen trabajo con el riego! Mover a la siguiente parada</string>
+  <string name="target_stop">Número de parada objetivo</string>
+  <string name="target_stop_desc">El número de paradas apuntadas actualmente</string>
 </resources>

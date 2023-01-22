@@ -134,8 +134,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     val informationIcon = ImageView(this)
     val settingsIcon = ImageView(this)
 
-    numbersIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_numbers_24))
-    waterDropIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_perm_scan_wifi_24))
+    waterDropIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_water_drop_24))
     translateIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_translate_24))
     informationIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_info_outline_24))
     settingsIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_settings_24))
@@ -179,6 +178,24 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       // Intent to open settings activity.
       val settingsIntent = Intent(this, SettingsActivity::class.java)
       startActivity(settingsIntent)
+    }
+
+    waterDropIcon.setOnClickListener {
+      if (targetStopIndex < 0) {
+        showResourceMessage(R.string.missing_target)
+        appState = AppState.LOOKING_FOR_CLOSEST_STOP
+      }
+
+      if (appState == AppState.WATERING_TREES) {
+        // val nextStopString =
+        showResourceMessage(R.string.move_to_next_stop)
+        appState = AppState.TARGETING_STOP
+      } else if (appState == AppState.TARGETING_STOP) {
+        showResourceMessage(R.string.tree_watering)
+        appState = AppState.WATERING_TREES
+      } else {
+        showResourceMessage(R.string.wrong_mode)
+      }
     }
 
     // Listen menu open and close events to animate the button content view

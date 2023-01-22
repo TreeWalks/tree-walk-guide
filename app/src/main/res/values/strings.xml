@@ -9,8 +9,8 @@
   <string name="camera_not_available">Camera not available. Try restarting the app.</string>
   <string name="ar_core_exception">Failed to create AR session: %1$s</string>
   <string name="welcome">Welcome to Tree Walk guide!</string>
-  <string name="stop_done">Tap on the map pin of the stop or select the checkmark menu to acknowledge visitation!</string>
-  <string name="plant_watering">Tap on plants to virtually water them within geofence area marked by the green posts to gather extra points. Select the scan symbol menu to reveal which plants count.</string>
+  <string name="stop_done">Click on the map pin of the stop or select the checkmark menu to acknowledge visitation</string>
+  <string name="tree_watering">Click on trees to virtually water them within geofence area marked by the green posts to gather extra points</string>
   <string name="select_language">Select a language</string>
   <string name="language_english">🇺🇸 English</string>
   <string name="language_spanish">🇪🇸 Spanish</string>
@@ -22,13 +22,16 @@
   <string name="already_visited">You already visited this stop</string>
   <string name="try_again">Please try again</string>
   <string name="move_closer">Move closer to the marker</string>
-  <string name="tap_closer">Tap closer to the marker</string>
-  <string name="geofence_area">Stand within the area marked by the green posts while watering</string>
-  <string name="tap_a_tree">Click closer to a tree for watering</string>
+  <string name="click_closer">Click closer to the marker</string>
+  <string name="geofence_area">Stand inside the area marked by the green posts while watering</string>
+  <string name="click_a_tree">Click closer to a tree for watering</string>
   <string name="companion_website">Companion website</string>
   <string name="companion_website_navigate">Open the companion website</string>
   <string name="speech_helper">Narrator helper</string>
   <string name="speech_helper_desc">The application speaks out about actions, instructions, and information</string>
   <string name="local_test">Local testing</string>
   <string name="local_test_desc">Populate walk stops around the user for testing purposes</string>
+  <string name="move_to_next_stop">Great job with the watering! Move to the next stop</string>
+  <string name="target_stop">Target Stop Number</string>
+  <string name="target_stop_desc">The number of currently targeted stop</string>
 </resources>

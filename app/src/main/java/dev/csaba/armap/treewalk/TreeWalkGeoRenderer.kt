@@ -432,7 +432,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         getSemanticsConfidence(frame, tap) > SEMANTICS_CONFIDENCE_THRESHOLD) {
         activity.wateringBonus()
       } else {
-        activity.showResourceMessage(R.string.tap_a_tree)
+        activity.showResourceMessage(R.string.click_a_tree)
       }
     }
   }

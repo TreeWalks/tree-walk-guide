@@ -7,6 +7,14 @@
     android:layout_height="match_parent"
     tools:context=".SettingsFragment">
 
+    <EditTextPreference
+        app:key="target_stop"
+        app:title="@string/target_stop"
+        app:summary="@string/target_stop_desc"
+        android:inputType="number"
+        android:maxLength="2"
+        android:icon="@drawable/baseline_numbers_24"/>
+
     <SwitchPreferenceCompat
         app:key="speech_helper"
         app:title="@string/speech_helper"
