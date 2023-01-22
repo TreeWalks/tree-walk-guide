@@ -288,7 +288,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  private suspend fun downloadAllDataAsync(): Deferred<Unit> = coroutineScope {
+  private suspend fun downloadAllDataAsync() = coroutineScope {
     async {
       val deferredLocation: Deferred<List<String>> = lifecycle.coroutineScope.async(Dispatchers.IO) {
         downloadData(LOCATIONS_FILE_NAME, R.array.locations)
