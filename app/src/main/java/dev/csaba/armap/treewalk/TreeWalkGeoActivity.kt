@@ -187,8 +187,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       }
 
       if (appState == AppState.WATERING_TREES) {
-        // val nextStopString =
-        showResourceMessage(R.string.move_to_next_stop)
+        val nextStopString = resources.getString(R.string.move_to_next_stop)
+        val nextNumberString = " ${nextStopNumber()}. "
+        val nextStopData = renderer.stops[nextStopIndex()]
+        val nextStopTitle = if (currentLanguage == "es") nextStopData.spanishData.title else nextStopData.englishData.title
+        showMessage(nextStopString + nextNumberString + nextStopTitle)
         appState = AppState.TARGETING_STOP
       } else if (appState == AppState.TARGETING_STOP) {
         showResourceMessage(R.string.tree_watering)
