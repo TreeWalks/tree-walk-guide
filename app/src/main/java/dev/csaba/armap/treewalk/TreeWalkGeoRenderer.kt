@@ -1,18 +1,3 @@
-/*
- * Copyright 2022 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package dev.csaba.armap.treewalk
 
 import android.opengl.Matrix
@@ -76,6 +61,8 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   private val vertexResult = FloatArray(4)
 
   val stops: MutableList<LocationData> = emptyList<LocationData>().toMutableList()
+  private val arrowModel = LocationModel(LatLng(0.0, 0.0), ObjectKind.ARROW)
+  private val wateringCanModel = LocationModel(LatLng(0.0, 0.0), ObjectKind.WATERING_CAN)
   private var scaffolded = false  // The stops array were scaffolded, but no anchors yet
   private var anchoring = false  // Anchors are created into the scaffold
   private var anchored = false  // Anchors were created as well into the scaffold
@@ -131,8 +118,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
       backgroundRenderer.setUseDepthVisualization(render, false)
       backgroundRenderer.setUseOcclusion(render, false)
-
-      // processLocationArray(activity.resources.getStringArray(R.array.tree_walk))
     } catch (e: IOException) {
       Log.e(TAG, "Failed to read a required asset file", e)
     }
@@ -220,7 +205,21 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       }
     }
 
-    // TODO: optionally add direction arrow or watering can
+    if (activity.appState == AppState.TARGETING_STOP || activity.appState == AppState.WATERING_TREES) {
+      // Dispose previous anchor because they are not stationary
+      wateringCanModel.anchor?.detach()
+      wateringCanModel.anchor = null
+      arrowModel.anchor?.detach()
+      arrowModel.anchor = null
+      val cameraPose = camera.pose
+      if (activity.appState == AppState.TARGETING_STOP) {
+        // TODO: how to rotate the directional help arrow
+        //  arrowModel.anchor = session.createAnchor(cameraPose)
+      } else if (activity.appState == AppState.WATERING_TREES) {
+        wateringCanModel.anchor = session.createAnchor(cameraPose.compose(Pose.makeTranslation(0f, -0.5f, -0.3f)))
+        render.renderObject(wateringCanModel, rotate=false, bounce=false)
+      }
+    }
 
     // Compose the virtual scene with the background.
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
@@ -303,7 +302,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
-    if (locationModel.anchor?.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS) {
+    if (locationModel.kind != ObjectKind.ARROW && locationModel.kind != ObjectKind.WATERING_CAN &&
+      locationModel.anchor?.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS)
+    {
       return
     }
 
