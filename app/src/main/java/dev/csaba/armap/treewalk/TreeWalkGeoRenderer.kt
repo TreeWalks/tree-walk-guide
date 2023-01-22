@@ -375,10 +375,11 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
   // Handle only one tap per frame, as taps are usually low frequency compared to frame rate.
   private fun handleTap(frame: Frame, camera: Camera) {
-    if (camera.trackingState != TrackingState.TRACKING ||
-      activity.appState == AppState.INITIALIZING ||
-      !anchored)
-    {
+    if (camera.trackingState != TrackingState.TRACKING) {
+      return
+    }
+
+    if (activity.appState == AppState.INITIALIZING || !anchored) {
       activity.showResourceMessage(R.string.initializing)
       return
     }
