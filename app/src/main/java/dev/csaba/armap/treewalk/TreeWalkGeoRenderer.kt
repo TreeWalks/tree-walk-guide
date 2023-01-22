@@ -21,8 +21,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import com.google.android.gms.maps.model.LatLng
-import com.google.ar.core.Anchor
-import com.google.ar.core.TrackingState
+import com.google.ar.core.*
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import dev.csaba.armap.common.helpers.DisplayRotationHelper
 import dev.csaba.armap.common.helpers.TrackingStateHelper
@@ -31,6 +30,7 @@ import dev.csaba.armap.common.samplerender.Mesh
 import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
+import dev.csaba.armap.common.samplerender.arcore.PlaneRenderer
 import dev.csaba.armap.treewalk.data.*
 import dev.csaba.armap.treewalk.helpers.splitAndCleanse
 import dev.csaba.armap.treewalk.helpers.zipMulti
@@ -166,6 +166,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       }
 
     val camera = frame.camera
+
+    // Handle one tap per frame.
+    handleTap(frame, camera)
 
     // BackgroundRenderer.updateDisplayGeometry must be called every frame to update the coordinates
     // used to draw the background camera image.
@@ -364,6 +367,34 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     }
 
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
+  }
+
+  // Handle only one tap per frame, as taps are usually low frequency compared to frame rate.
+  private fun handleTap(frame: Frame, camera: Camera) {
+    if (camera.trackingState != TrackingState.TRACKING) return
+    val tap = activity.view.tapHelper.poll() ?: return
+
+    val hitResultList = frame.hitTest(tap)
+
+    // Hits are sorted by depth. Consider only closest hit on a plane, Oriented Point, Depth Point,
+    // or Instant Placement Point.
+    val firstHitResult =
+      hitResultList.firstOrNull { hit ->
+        when (val trackable = hit.trackable!!) {
+          is Plane ->
+            trackable.isPoseInPolygon(hit.hitPose) &&
+                    PlaneRenderer.calculateDistanceToPlane(hit.hitPose, camera.pose) > 0
+          is Point -> trackable.orientationMode == Point.OrientationMode.ESTIMATED_SURFACE_NORMAL
+          is InstantPlacementPoint -> true
+          // DepthPoints are only returned if Config.DepthMode is set to AUTOMATIC.
+          is DepthPoint -> true
+          else -> false
+        }
+      }
+
+    if (firstHitResult != null) {
+      // TODO: measure ray distance from target
+    }
   }
 
   private fun showError(errorMessage: String) =
