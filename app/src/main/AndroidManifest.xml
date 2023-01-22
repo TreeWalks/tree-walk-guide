@@ -54,6 +54,15 @@
       </intent-filter>
     </activity>
 
+    <activity
+        android:name=".SettingsActivity"
+        android:exported="true">
+      <intent-filter>
+        <action android:name="android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS" />
+        <category android:name="android.intent.category.PREFERENCE" />
+      </intent-filter>
+    </activity>
+
     <!-- Per App Locale -->
     <service
         android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
