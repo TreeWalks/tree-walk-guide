@@ -65,7 +65,6 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
   lateinit var view: TreeWalkGeoView
-  var loaded = false
   private lateinit var renderer: TreeWalkGeoRenderer
   private val fileDownloader by lazy {
     FileDownloader(
@@ -89,6 +88,31 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   private var achievementClient: AchievementsClient? = null
   private var leaderboardsClient: LeaderboardsClient? = null
   private var score = 0L
+  var targetStopIndex = -1
+
+  fun targetStopNumber(): Int {
+    return if (targetStopIndex >= 0) targetStopIndex + 1 else targetStopIndex
+  }
+
+  fun nextStopIndex(): Int {
+    if (renderer.stops.isEmpty()) {
+      return -1
+    }
+
+    if (targetStopIndex < 0) {
+      return -1
+    }
+
+    return (targetStopIndex + 1) % renderer.stops.size
+  }
+
+  fun nextStopNumber(): Int {
+    if (renderer.stops.isEmpty()) {
+      return -1
+    }
+
+    return nextStopIndex() + 1
+  }
 
   private fun createCircularFABMenu() {
     // Set up the white button on the lower right corner

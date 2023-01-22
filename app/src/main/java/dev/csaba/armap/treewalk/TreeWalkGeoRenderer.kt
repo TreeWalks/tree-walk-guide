@@ -16,10 +16,10 @@
 package dev.csaba.armap.treewalk
 
 import android.opengl.Matrix
-import android.os.CountDownTimer
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.coroutineScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Anchor
 import com.google.ar.core.TrackingState
@@ -31,64 +31,12 @@ import dev.csaba.armap.common.samplerender.Mesh
 import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
-import java.io.File
-import java.io.FileReader
+import dev.csaba.armap.treewalk.data.*
+import dev.csaba.armap.treewalk.helpers.splitAndCleanse
+import dev.csaba.armap.treewalk.helpers.zipMulti
+import kotlinx.coroutines.launch
 import java.io.IOException
-import java.util.*
-import kotlin.Comparator
 import kotlin.math.*
-
-enum class LocationKind {
-  GARDEN,
-  TREE,
-  TREES;
-
-  companion object {
-    fun getByName(name: String) = valueOf(name.uppercase(Locale.getDefault()))
-  }
-}
-
-data class LocationData(
-  val gpsLocation: LatLng,
-  val title: String,
-  val kind: LocationKind,
-  val url: String,
-  val modelMatrix: FloatArray,
-  val modelViewMatrix: FloatArray,
-  val modelViewProjectionMatrix: FloatArray // projection x view x model
-) {
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (javaClass != other?.javaClass) return false
-
-    other as LocationData
-
-    if (!title.equals(other.title)) return false
-    if (!url.equals(other.url)) return false
-    if (gpsLocation != other.gpsLocation) return false
-    if (!modelMatrix.contentEquals(other.modelMatrix)) return false
-    if (!modelViewMatrix.contentEquals(other.modelViewMatrix)) return false
-    if (!modelViewProjectionMatrix.contentEquals(other.modelViewProjectionMatrix)) return false
-
-    return true
-  }
-
-  override fun hashCode(): Int {
-    var result = gpsLocation.hashCode()
-    result = 31 * result + title.hashCode()
-    result = 31 * result + url.hashCode()
-    result = 31 * result + modelMatrix.contentHashCode()
-    result = 31 * result + modelViewMatrix.contentHashCode()
-    result = 31 * result + modelViewProjectionMatrix.contentHashCode()
-    return result
-  }
-}
-
-data class MapArea(
-  val name: String,
-  var center: LatLng,
-  val locationData: MutableList<LocationData>
-)
 
 class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   SampleRender.Renderer, DefaultLifecycleObserver {
@@ -99,34 +47,30 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     private const val Z_NEAR = 0.1f
     private const val Z_FAR = 1000f
 
-    private const val MEAN_EARTH_RADIUS = 6371.008
-    private const val D2R = Math.PI / 180.0
-
     private const val HOVER_ABOVE_TERRAIN = 0.5  // meters
-    private const val AREA_PROXIMITY_THRESHOLD = 0.3  // kilometers
+    private const val POST_PROXIMITY_THRESHOLD = 0.003  // kilometers
   }
 
   private lateinit var backgroundRenderer: BackgroundRenderer
   private lateinit var virtualSceneFramebuffer: Framebuffer
   private var hasSetTextureNames = false
 
-  // Virtual object (ARCore pawn)
-  private lateinit var downArrowMesh: Mesh
-  private lateinit var greenObjectShader: Shader
+  // Virtual objects
   private lateinit var mapPinMesh: Mesh
+  private lateinit var downArrowMesh: Mesh
+  private lateinit var arrowMesh: Mesh
+  private lateinit var wateringCanMesh: Mesh
   private lateinit var redObjectShader: Shader
+  private lateinit var greenObjectShader: Shader
+  private lateinit var blueObjectShader: Shader
 
   // Temporary matrix allocated here to reduce number of allocations for each frame.
   private val viewMatrix = FloatArray(16)
   private val projectionMatrix = FloatArray(16)
-  private val mapAreas: MutableList<MapArea> = emptyList<MapArea>().toMutableList()
-  private var areaIndex: Int = -1
-  private var loaded = false
-  private var populating = false
-  private val timer = object: CountDownTimer(2000, 1000) {
-    override fun onTick(millisUntilFinished: Long) {}
-    override fun onFinish() { onMapClick() }
-  }
+  val stops: MutableList<LocationData> = emptyList<LocationData>().toMutableList()
+  var scaffolded = false  // The stops array were scaffolded, but no anchors yet
+  var anchoring = false  // Anchors are created into the scaffold
+  var anchored = false  // Anchors were created as well into the scaffold
 
   private val session
     get() = activity.arCoreSessionHelper.session
@@ -151,15 +95,10 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       virtualSceneFramebuffer = Framebuffer(render, 1, 1)
 
       // Virtual object to render (Geospatial Marker)
-      downArrowMesh = Mesh.createFromAsset(render, "models/down_arrow.obj")
-      greenObjectShader =
-        Shader.createFromAssets(
-          render,
-          "shaders/ar_unlit_object.vert",
-          "shaders/ar_unlit_green_object.frag",
-          null
-        )
       mapPinMesh = Mesh.createFromAsset(render, "models/map_pin.obj")
+      downArrowMesh = Mesh.createFromAsset(render, "models/down_arrow.obj")
+      arrowMesh = Mesh.createFromAsset(render, "models/arrow.obj")
+      wateringCanMesh = Mesh.createFromAsset(render, "models/watering_can.obj")
       redObjectShader =
         Shader.createFromAssets(
           render,
@@ -167,11 +106,25 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
           "shaders/ar_unlit_red_object.frag",
           null
         )
+      greenObjectShader =
+        Shader.createFromAssets(
+          render,
+          "shaders/ar_unlit_object.vert",
+          "shaders/ar_unlit_green_object.frag",
+          null
+        )
+      blueObjectShader =
+        Shader.createFromAssets(
+          render,
+          "shaders/ar_unlit_object.vert",
+          "shaders/ar_unlit_blue_object.frag",
+          null
+        )
 
       backgroundRenderer.setUseDepthVisualization(render, false)
       backgroundRenderer.setUseOcclusion(render, false)
 
-      // processLocationArray("tree_walk", activity.resources.getStringArray(R.array.tree_walk))
+      // processLocationArray(activity.resources.getStringArray(R.array.tree_walk))
     } catch (e: IOException) {
       Log.e(TAG, "Failed to read a required asset file", e)
     }
@@ -203,7 +156,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
     // Obtain the current frame from ARSession. When the configuration is set to
     // UpdateMode.BLOCKING (it is by default), this will throttle the rendering to the
-    // camera framerate.
+    // camera frame rate.
     val frame =
       try {
         session.update()
@@ -244,208 +197,122 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
     // Step 1.1.: Obtain Geospatial information and display it on the map.
     val earth = session.earth
-    if (earth?.trackingState == TrackingState.TRACKING) {
-      if (areaIndex < 0 && !populating && loaded) {
-        populating = true
-        timer.start()
+    if (earth?.trackingState == TrackingState.TRACKING && anchored) {
+      // Draw the placed anchors, if any exists and visible.
+      val nextStopIndex = activity.nextStopIndex()
+      val cameraPose = earth.cameraGeospatialPose
+      for ((index, stop) in stops.withIndex()) {
+        // TODO: if current stop, if next stop (or if stop is close?)
+        val rotate = index == activity.targetStopIndex || index == nextStopIndex
+        val bounce = index == nextStopIndex
+        render.renderObject(stop.locationModel, rotate, bounce)
+        render.renderObject(stop.nwGeoFenceModel, rotate, bounce)
+        render.renderObject(stop.neGeoFenceModel, rotate, bounce)
+        render.renderObject(stop.seGeoFenceModel, rotate, bounce)
+        render.renderObject(stop.swGeoFenceModel, rotate, bounce)
+
+        if (rotate) {
+          stop.locationModel.distanceFrom(cameraPose.latitude, cameraPose.longitude)
+        }
       }
     }
 
-    // Draw the placed anchors, if they exist.
-    for ((index, earthAnchor) in earthAnchors.withIndex()) {
-      render.renderObjectAtAnchor(earthAnchor, index)
-    }
+    // TODO: optionally add direction arrow or watering can
 
     // Compose the virtual scene with the background.
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
   }
 
-  private fun processLocationArray(name: String, locations: Array<String>) {
-    val mapArea = MapArea(
-      name,
-      LatLng(0.0, 0.0),
-      emptyList<LocationData>().toMutableList()
+  private fun processLocalizedData(localizedString: List<String>): LocalizedData {
+    return LocalizedData(
+      localizedString[0],
+      localizedString[1],
+      localizedString[2],
+      localizedString[3],
     )
-
-    var latSum = 0.0
-    var lonSum = 0.0
-    for (location in locations) {
-      val locationParts = location.split("|")
-      val lat = locationParts[0].trim().toDouble()
-      val lon = locationParts[1].trim().toDouble()
-      val title = if (locationParts.size > 2) locationParts[2].trim() else ""
-      val kind = if (locationParts.size > 3) LocationKind.getByName(locationParts[3].trim()) else LocationKind.GARDEN
-      val url = if (locationParts.size > 4) locationParts[4].trim() else ""
-      mapArea.locationData.add(
-        LocationData(
-          LatLng(lat, lon),
-          title,
-          kind,
-          url,
-          FloatArray(16),
-          FloatArray(16),
-          FloatArray(16)
-        )
-      )
-      latSum += lat
-      lonSum += lon
-    }
-
-    mapArea.center = LatLng(latSum / locations.size, lonSum / locations.size)
-    Log.i(TAG, "$name center ${mapArea.center.latitude} ${mapArea.center.longitude}")
-
-    var override = -1
-    var found = false
-    for ((i1, mapA) in mapAreas.withIndex()) {
-      if (mapA.name == name) {
-        found = true
-        if (haversineInKm(mapA.center.latitude, mapA.center.longitude,
-            mapArea.center.latitude, mapArea.center.longitude) > 1e-7)
-        {
-          override = i1
-        } else {
-          for ((i2, location) in mapArea.locationData.withIndex()) {
-            if (haversineInKm(location.gpsLocation.latitude, location.gpsLocation.longitude,
-                mapA.locationData[i2].gpsLocation.latitude, mapA.locationData[i2].gpsLocation.longitude) > 1e-7)
-            {
-              override = i1
-              break
-            }
-          }
-        }
-
-        break
-      }
-    }
-
-    if (!found) {
-      mapAreas.add(mapArea)
-    } else if (override >= 0) {
-      mapAreas[override] = mapArea
-    }
   }
 
-  fun processLocations(locationsFile: File) {
-    if (!locationsFile.exists()) {
-      Log.w(TAG, "Locations file ${locationsFile.path} doesn't exist")
-      loaded = true
+  fun processLocations(locations: List<String>, locationsEn: List<String>, locationsEs: List<String>) {
+    if (stops.isNotEmpty()) {
       return
     }
 
-    val reader = FileReader(locationsFile)
-    val locationsXmlContent = reader.readText()
-    reader.close()
-    val areaMapParts = locationsXmlContent.split("<string-array name=\"")
-    if (areaMapParts.size <= 1) {
-      loaded = true
-      return
+    zipMulti(locations, locationsEn, locationsEs) {
+      val parts = splitAndCleanse(it[0])
+      val pinGps = LatLng(parts[0].trim().toDouble(), parts[1].trim().toDouble())
+      val stopKind = ObjectKind.getByName(parts[6].trim())
+      val nwGeoLat = parts[2].trim().toDouble()
+      val nwGeoLon = parts[3].trim().toDouble()
+      val nwGeoGps = LatLng(nwGeoLat, nwGeoLon)
+      val seGeoLat = parts[4].trim().toDouble()
+      val seGeoLon = parts[5].trim().toDouble()
+      val seGeoGps = LatLng(seGeoLat, seGeoLon)
+      stops.add(LocationData(
+        pinGps,
+        nwGeoGps,
+        seGeoGps,
+        stopKind,
+        if (parts[7].trim().isNotEmpty()) parts[7].trim().toInt() else 0,
+        if (parts[8].trim().isNotEmpty()) parts[7].trim().toInt() else 0,
+        processLocalizedData(splitAndCleanse(it[1])),
+        processLocalizedData(splitAndCleanse(it[2])),
+        LocationModel(pinGps, stopKind),
+        LocationModel(nwGeoGps, ObjectKind.POST),
+        LocationModel(LatLng(nwGeoLat, seGeoLon), ObjectKind.POST),
+        LocationModel(seGeoGps, ObjectKind.POST),
+        LocationModel(LatLng(seGeoLat, nwGeoLon), ObjectKind.POST)
+      ))
     }
 
-    for (areaMapPart in areaMapParts.subList(1, areaMapParts.size)) {
-      if (areaMapPart.indexOf('"') < 0) {
-        continue
-      }
-
-      val name = areaMapPart.split('"')[0]
-      val areaLocations: MutableList<String> = emptyList<String>().toMutableList()
-      val itemParts = areaMapPart.split("<item>")
-      if (itemParts.size <= 1) {
-        continue
-      }
-
-      for (itemPart in itemParts.subList(1, itemParts.size)) {
-        val itemParts2 = itemPart.split("</item>")
-        if (itemParts2.isNotEmpty() && itemParts2.indexOf(",") >= 0) {
-          areaLocations.add(itemParts2[0])
-        }
-      }
-
-      if (areaLocations.isNotEmpty()) {
-        processLocationArray(name, areaLocations.toTypedArray())
-      }
-    }
-
-    loaded = true
+    scaffolded = true
   }
 
-  private var earthAnchors: MutableList<Anchor> = emptyList<Anchor>().toMutableList()
-
-  fun onMapClick() {
-    populating = true
-    if (areaIndex >= 0) {
-      populating = false
+  private fun createAnchors() {
+    if (anchoring) {
       return
     }
+
+    anchoring = true
 
     // Step 1.2.: place an anchor at the given position.
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
-      populating = false
+      anchoring = false
       return
     }
 
-    val cameraPose = earth.cameraGeospatialPose
-    for ((index, mapArea) in mapAreas.withIndex()) {
-      val closestLocation = mapArea.locationData.minWithOrNull(Comparator.comparingDouble {
-        haversineInKm(it.gpsLocation.latitude, it.gpsLocation.longitude, cameraPose.latitude, cameraPose.longitude)
-      })
-      if (closestLocation != null) {
-        val closestDistance = haversineInKm(
-          closestLocation.gpsLocation.latitude, closestLocation.gpsLocation.longitude,
-          cameraPose.latitude, cameraPose.longitude
-        )
-        Log.i(TAG, "Distance from ${mapArea.name} is $closestDistance")
-        if (closestDistance < AREA_PROXIMITY_THRESHOLD) {
-          areaIndex = index
-          break
-        }
-      }
+    for (stop in stops) {
+      stop.addAnchors(earth, HOVER_ABOVE_TERRAIN)
     }
 
-    if (areaIndex < 0) {
-      populating = false
-      return
-    }
-
-    for (earthAnchor in earthAnchors) {
-      earthAnchor.detach()
-    }
-
-    // The rotation quaternion of the anchor in EUS coordinates.
-    val qx = 0f
-    val qy = 0f
-    val qz = 0f
-    val qw = 1f
-
-    if (earthAnchors.isEmpty()) {
-      for (location in mapAreas[areaIndex].locationData) {
-        earthAnchors.add(earth.resolveAnchorOnTerrain(
-          location.gpsLocation.latitude, location.gpsLocation.longitude, HOVER_ABOVE_TERRAIN, qx, qy, qz, qw))
-      }
-    }
-
-    populating = false
+    anchored = true
+    anchoring = false
   }
 
-  private fun SampleRender.renderObjectAtAnchor(anchor: Anchor, index: Int) {
-    if (areaIndex < 0 || populating) {
+  private fun SampleRender.renderObject(locationModel: LocationModel, rotate: Boolean, bounce: Boolean) {
+    if (!anchored) {
+      if (scaffolded && !anchoring) {
+        activity.lifecycle.coroutineScope.launch { createAnchors() }
+      }
+    }
+
+    if (locationModel.anchor == null) {
       return
     }
 
-    if (anchor.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS) {
+    if (locationModel.anchor?.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS) {
       return
     }
 
-    if (anchor.trackingState != TrackingState.TRACKING) {
+    if (locationModel.anchor?.trackingState != TrackingState.TRACKING) {
       return
     }
 
     // Calculate model/view/projection matrices
     val currentTimeMillis = System.currentTimeMillis()
-    val transformationMatrix = FloatArray(16)
-    val locData = mapAreas[areaIndex].locationData[index]
-    if (locData.kind == LocationKind.GARDEN) {  // TODO
-      Matrix.setIdentityM(transformationMatrix, 0)
+    val bounceMatrix = FloatArray(16)
+    if (bounce) {
+      Matrix.setIdentityM(bounceMatrix, 0)
       // Bounce animation follows a half sine wave
       val angleRadian = currentTimeMillis % 1000 * Math.PI / 1000f
       val deltaY = sin(angleRadian)
@@ -454,25 +321,48 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       // Combined with OpenGL ES format matrices:
       // 4 x 4 column-vector matrices stored in column-major order
       // (row major 7. (0-based) pos. is 13. (0-based) column major pos.)
-      transformationMatrix[13] = deltaY.toFloat()
-    } else {
+      bounceMatrix[13] = deltaY.toFloat()
+    }
+
+    val rotationMatrix = FloatArray(16)
+    if (rotate) {
       // Spin around once per second
       val angleDegrees = currentTimeMillis % 1000 * 360f / 1000f
-      Matrix.setRotateM(transformationMatrix, 0, angleDegrees, 0f, 1f, 0f)
+      Matrix.setRotateM(rotationMatrix, 0, angleDegrees, 0f, 1f, 0f)
     }
-    val transformedModelMatrix = FloatArray(16)
 
+    var transformationMatrix = FloatArray(16)
+    if (rotate && bounce) {
+      Matrix.multiplyMM(transformationMatrix, 0, bounceMatrix, 0, rotationMatrix, 0)
+    } else if (rotate) {
+      transformationMatrix = rotationMatrix
+    } else if (bounce) {
+      transformationMatrix = bounceMatrix
+    }
+
+    val transformedModelMatrix = FloatArray(16)
     // Get the current pose of the Anchor in world space. The Anchor pose is updated
     // during calls to session.update() as ARCore refines its estimate of the world.
-    anchor.pose.toMatrix(locData.modelMatrix, 0)
-    Matrix.multiplyMM(transformedModelMatrix, 0, locData.modelMatrix, 0, transformationMatrix, 0)
-    Matrix.multiplyMM(locData.modelViewMatrix, 0, viewMatrix, 0, transformedModelMatrix, 0)
-    Matrix.multiplyMM(locData.modelViewProjectionMatrix, 0, projectionMatrix, 0, locData.modelViewMatrix, 0)
+    locationModel.anchor?.pose?.toMatrix(locationModel.modelMatrix, 0)
+    Matrix.multiplyMM(transformedModelMatrix, 0, locationModel.modelMatrix, 0, transformationMatrix, 0)
+    Matrix.multiplyMM(locationModel.modelViewMatrix, 0, viewMatrix, 0, transformedModelMatrix, 0)
+    Matrix.multiplyMM(locationModel.modelViewProjectionMatrix, 0, projectionMatrix, 0, locationModel.modelViewMatrix, 0)
 
     // Update shader properties and draw
-    val virtualObjectShader = if (locData.kind == LocationKind.GARDEN) greenObjectShader else redObjectShader
-    virtualObjectShader.setMat4("u_ModelViewProjection", locData.modelViewProjectionMatrix)
-    val virtualObjectMesh = if (locData.kind == LocationKind.GARDEN) downArrowMesh else mapPinMesh
+    val virtualObjectShader = when (ObjectColor.getColor(locationModel.kind)) {
+      ObjectColor.RED -> redObjectShader
+      ObjectColor.GREEN -> greenObjectShader
+      ObjectColor.BLUE -> blueObjectShader
+    }
+
+    virtualObjectShader.setMat4("u_ModelViewProjection", locationModel.modelViewProjectionMatrix)
+    val virtualObjectMesh = when (ObjectShape.getShape(locationModel.kind)) {
+      ObjectShape.MAP_PIN -> mapPinMesh
+      ObjectShape.DOWN_ARROW -> downArrowMesh
+      ObjectShape.ARROW -> arrowMesh
+      ObjectShape.WATERING_CAN -> wateringCanMesh
+    }
+
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
   }
 
@@ -481,16 +371,4 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
   private fun showMessage(message: String) =
     activity.view.snackbarHelper.showMessage(activity, message)
-
-  private fun haversineInKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-    // https://stackoverflow.com/a/61990886/292502
-    // Haversine to decide which locations sets to populate
-    val lonDiff = (lon2 - lon1) * D2R
-    val latDiff = (lat2 - lat1) * D2R
-    val latSin = sin(latDiff / 2.0)
-    val lonSin = sin(lonDiff / 2.0)
-    val a = latSin * latSin + (cos(lat1 * D2R) * cos(lat2 * D2R) * lonSin * lonSin)
-    val c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a))
-    return MEAN_EARTH_RADIUS * c
-  }
 }
