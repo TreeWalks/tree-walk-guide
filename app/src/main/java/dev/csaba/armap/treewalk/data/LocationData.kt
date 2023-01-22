@@ -17,6 +17,7 @@ data class LocationData(
     val neGeoFenceModel: LocationModel,
     val seGeoFenceModel: LocationModel,
     val swGeoFenceModel: LocationModel,
+    var visited: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

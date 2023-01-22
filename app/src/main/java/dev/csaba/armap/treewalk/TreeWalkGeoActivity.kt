@@ -43,6 +43,7 @@ import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu
 import com.oguzdev.circularfloatingactionmenu.library.SubActionButton
 import dev.csaba.armap.common.helpers.FullScreenHelper
 import dev.csaba.armap.common.samplerender.SampleRender
+import dev.csaba.armap.treewalk.data.AppState
 import dev.csaba.armap.treewalk.helpers.*
 import io.reactivex.disposables.Disposables
 import io.reactivex.plugins.RxJavaPlugins
@@ -89,6 +90,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   private var leaderboardsClient: LeaderboardsClient? = null
   private var score = 0L
   var targetStopIndex = -1
+  var appState: AppState = AppState.INITIALIZING
+  var speak = false
 
   fun targetStopNumber(): Int {
     return if (targetStopIndex >= 0) targetStopIndex + 1 else targetStopIndex
@@ -307,7 +310,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
   override fun onDestroy() {
     super.onDestroy()
-    textToSpeech?.shutdown();
+    textToSpeech?.shutdown()
     disposable.dispose()
   }
 
@@ -476,13 +479,37 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
     achievementClient?.unlock(getString(achievementId))
     score += 1000
+    submitScore()
+  }
+
+  fun wateringBonus() {
+    score += 10
   }
 
   fun submitScore() {
     leaderboardsClient?.submitScore(getString(R.string.leaderboard_tree_walk), score)
   }
 
-  fun speak(text: String) {
+  private fun speak(text: String) {
+    // TODO: should be suspend function?
     textToSpeech?.speak(text,TextToSpeech.QUEUE_FLUSH, null, null)
+  }
+
+  fun showError(errorMessage: String, allowSpeak: Boolean = true) {
+    view.snackbarHelper.showError(this, errorMessage)
+    if (speak && allowSpeak) {
+      speak(errorMessage)
+    }
+  }
+
+  private fun showMessage(message: String, allowSpeak: Boolean = true) {
+    view.snackbarHelper.showMessage(this, message)
+    if (speak && allowSpeak) {
+      speak(message)
+    }
+  }
+
+  fun showResourceMessage(messageId: Int, allowSpeak: Boolean = true) {
+    showMessage(resources.getString(messageId), allowSpeak)
   }
 }

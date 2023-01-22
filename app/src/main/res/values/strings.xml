@@ -16,7 +16,13 @@
   <string name="language_spanish">🇪🇸 Spanish</string>
   <string name="apply_action">Apply</string>
   <string name="cancel_action">Cancel</string>
-  <string name="move_closer">Move closer to the marker then tap again</string>
-  <string name="face_the_marker">Face the marker then tap again</string>
-  <string name="move_closer_and_face_the_marker">Move closer and face the marker then tap again</string>
+  <string name="initializing">The app is initializing</string>
+  <string name="wrong_mode">Target a stop or switch to tree watering mode</string>
+  <string name="missing_target">Unable to find the target stop</string>
+  <string name="already_visited">You already visited this stop</string>
+  <string name="try_again">Please try again</string>
+  <string name="move_closer">Move closer to the marker</string>
+  <string name="tap_closer">Tap closer to the marker</string>
+  <string name="geofence_area">Stand within the area marked by the green posts while watering</string>
+  <string name="tap_a_tree">Click closer to a tree for watering</string>
 </resources>

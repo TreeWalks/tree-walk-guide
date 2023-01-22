@@ -31,7 +31,13 @@
   <string name="language_spanish">🇪🇸 Español</string>
   <string name="apply_action">Aplicar</string>
   <string name="cancel_action">Cancelar</string>
+  <string name="initializing">La aplicación se está inicializando.</string>
+  <string name="wrong_mode">Apunte a una parada o cambie al modo de riego de árboles</string>
+  <string name="missing_target">No se puede encontrar la parada de destino</string>
+  <string name="already_visited">Ya visitaste este lugar</string>
+  <string name="try_again">Inténtalo de nuevo</string>
   <string name="move_closer">Acérquese al marcador y luego toque de nuevo</string>
-  <string name="face_the_marker">Mire hacia el marcador y luego toque de nuevo</string>
-  <string name="move_closer_and_face_the_marker">Acérquese y mire hacia el marcador, luego toque nuevamente</string>
+  <string name="tap_closer">Mire hacia el marcador y luego toque de nuevo</string>
+  <string name="geofence_area">Párese dentro del área marcada por los postes verdes mientras riega</string>
+  <string name="tap_a_tree">Haga clic más cerca de un árbol para regar</string>
 </resources>

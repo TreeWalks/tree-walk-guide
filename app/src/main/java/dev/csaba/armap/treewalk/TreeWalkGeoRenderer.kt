@@ -17,12 +17,14 @@ package dev.csaba.armap.treewalk
 
 import android.opengl.Matrix
 import android.util.Log
+import android.view.MotionEvent
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.CameraNotAvailableException
+import com.google.ar.core.exceptions.NotYetAvailableException
 import dev.csaba.armap.common.helpers.DisplayRotationHelper
 import dev.csaba.armap.common.helpers.TrackingStateHelper
 import dev.csaba.armap.common.samplerender.Framebuffer
@@ -30,17 +32,17 @@ import dev.csaba.armap.common.samplerender.Mesh
 import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
-import dev.csaba.armap.common.samplerender.arcore.PlaneRenderer
 import dev.csaba.armap.treewalk.data.*
 import dev.csaba.armap.treewalk.helpers.splitAndCleanse
 import dev.csaba.armap.treewalk.helpers.zipMulti
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.nio.ByteOrder
 import kotlin.math.*
 
 class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   SampleRender.Renderer, DefaultLifecycleObserver {
-  //<editor-fold desc="ARCore initialization" defaultstate="collapsed">
+
   companion object {
     const val TAG = "TreeWalkGeoRenderer"
 
@@ -49,6 +51,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
     private const val HOVER_ABOVE_TERRAIN = 0.5  // meters
     private const val POST_PROXIMITY_THRESHOLD = 0.003  // kilometers
+
+    private const val CUBE_HIT_AREA_RADIUS = 1.0
+    private const val SEMANTICS_CONFIDENCE_THRESHOLD = 0.5
   }
 
   private lateinit var backgroundRenderer: BackgroundRenderer
@@ -67,10 +72,13 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   // Temporary matrix allocated here to reduce number of allocations for each frame.
   private val viewMatrix = FloatArray(16)
   private val projectionMatrix = FloatArray(16)
+  private val centerVertexOfCube = floatArrayOf(0f, 0f, 0f, 1f)
+  private val vertexResult = FloatArray(4)
+
   val stops: MutableList<LocationData> = emptyList<LocationData>().toMutableList()
-  var scaffolded = false  // The stops array were scaffolded, but no anchors yet
-  var anchoring = false  // Anchors are created into the scaffold
-  var anchored = false  // Anchors were created as well into the scaffold
+  private var scaffolded = false  // The stops array were scaffolded, but no anchors yet
+  private var anchoring = false  // Anchors are created into the scaffold
+  private var anchored = false  // Anchors were created as well into the scaffold
 
   private val session
     get() = activity.arCoreSessionHelper.session
@@ -134,12 +142,10 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     displayRotationHelper.onSurfaceChanged(width, height)
     virtualSceneFramebuffer.resize(width, height)
   }
-  //</editor-fold>
 
   override fun onDrawFrame(render: SampleRender) {
     val session = session ?: return
 
-    //<editor-fold desc="ARCore frame boilerplate" defaultstate="collapsed">
     // Texture names should only be set once on a GL thread unless they change. This is done during
     // onDrawFrame rather than onSurfaceCreated since the session is not guaranteed to have been
     // initialized during the execution of onSurfaceCreated.
@@ -196,14 +202,12 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     camera.getViewMatrix(viewMatrix, 0)
 
     render.clear(virtualSceneFramebuffer, 0f, 0f, 0f, 0f)
-    //</editor-fold>
 
     // Step 1.1.: Obtain Geospatial information and display it on the map.
     val earth = session.earth
     if (earth?.trackingState == TrackingState.TRACKING && anchored) {
       // Draw the placed anchors, if any exists and visible.
       val nextStopIndex = activity.nextStopIndex()
-      val cameraPose = earth.cameraGeospatialPose
       for ((index, stop) in stops.withIndex()) {
         // TODO: if current stop, if next stop (or if stop is close?)
         val rotate = index == activity.targetStopIndex || index == nextStopIndex
@@ -213,10 +217,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         render.renderObject(stop.neGeoFenceModel, rotate, bounce)
         render.renderObject(stop.seGeoFenceModel, rotate, bounce)
         render.renderObject(stop.swGeoFenceModel, rotate, bounce)
-
-        if (rotate) {
-          stop.locationModel.distanceFrom(cameraPose.latitude, cameraPose.longitude)
-        }
       }
     }
 
@@ -371,35 +371,132 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
   // Handle only one tap per frame, as taps are usually low frequency compared to frame rate.
   private fun handleTap(frame: Frame, camera: Camera) {
-    if (camera.trackingState != TrackingState.TRACKING) return
-    val tap = activity.view.tapHelper.poll() ?: return
+    if (camera.trackingState != TrackingState.TRACKING ||
+      activity.appState == AppState.INITIALIZING ||
+      !anchored)
+    {
+      activity.showResourceMessage(R.string.initializing)
+      return
+    }
 
-    val hitResultList = frame.hitTest(tap)
+    if (activity.appState != AppState.TARGETING_STOP && activity.appState != AppState.WATERING_TREES) {
+      activity.showResourceMessage(R.string.wrong_mode)
+      return
+    }
 
-    // Hits are sorted by depth. Consider only closest hit on a plane, Oriented Point, Depth Point,
-    // or Instant Placement Point.
-    val firstHitResult =
-      hitResultList.firstOrNull { hit ->
-        when (val trackable = hit.trackable!!) {
-          is Plane ->
-            trackable.isPoseInPolygon(hit.hitPose) &&
-                    PlaneRenderer.calculateDistanceToPlane(hit.hitPose, camera.pose) > 0
-          is Point -> trackable.orientationMode == Point.OrientationMode.ESTIMATED_SURFACE_NORMAL
-          is InstantPlacementPoint -> true
-          // DepthPoints are only returned if Config.DepthMode is set to AUTOMATIC.
-          is DepthPoint -> true
-          else -> false
-        }
+    val earth = session?.earth ?: return
+    if (earth.trackingState != TrackingState.TRACKING) {
+      activity.showResourceMessage(R.string.try_again)
+      return
+    }
+
+    if (activity.appState == AppState.TARGETING_STOP) {
+      if (activity.targetStopIndex < 0) {
+        activity.showResourceMessage(R.string.missing_target)
+        return
       }
 
-    if (firstHitResult != null) {
-      // TODO: measure ray distance from target
+      val stop = stops[activity.targetStopIndex]
+      if (stop.visited) {
+        activity.showResourceMessage(R.string.already_visited)
+        return
+      }
+
+      val cameraPose = earth.cameraGeospatialPose
+      stop.locationModel.distanceFrom(cameraPose.latitude, cameraPose.longitude)
+      if (stop.locationModel.distance > POST_PROXIMITY_THRESHOLD) {
+        activity.showResourceMessage(R.string.move_closer)
+        return
+      }
+
+      val tap = activity.view.tapHelper.poll() ?: return
+      if (isMotionEventApproxHitLocation(stop.locationModel, tap)) {
+        stop.visited = true
+        activity.unlockAchievement(activity.targetStopIndex)
+      }
+    } else if (activity.appState == AppState.WATERING_TREES) {
+      val cameraPose = earth.cameraGeospatialPose
+      val stop = stops[activity.targetStopIndex]
+      if (!isGpsInGeoFence(cameraPose.latitude, cameraPose.longitude, stop)) {
+        activity.showResourceMessage(R.string.geofence_area)
+        return
+      }
+
+      val tap = activity.view.tapHelper.poll() ?: return
+      if (getTapSemantics(frame, tap) == SemanticsLabel.TREE &&
+        getSemanticsConfidence(frame, tap) > SEMANTICS_CONFIDENCE_THRESHOLD) {
+        activity.wateringBonus()
+      } else {
+        activity.showResourceMessage(R.string.tap_a_tree)
+      }
     }
   }
 
-  private fun showError(errorMessage: String) =
-    activity.view.snackbarHelper.showError(activity, errorMessage)
+  private fun isGpsInGeoFence(lat: Double, lon: Double, location: LocationData): Boolean {
+    val minLat = min(location.geoFenceSE.latitude, location.geoFenceNW.latitude)
+    val maxLat = max(location.geoFenceSE.latitude, location.geoFenceNW.latitude)
+    val minLon = min(location.geoFenceSE.longitude, location.geoFenceNW.longitude)
+    val maxLon = max(location.geoFenceSE.longitude, location.geoFenceNW.longitude)
 
-  private fun showMessage(message: String) =
-    activity.view.snackbarHelper.showMessage(activity, message)
+    return lat in minLat..maxLat && lon in minLon..maxLon
+  }
+
+  // https://stackoverflow.com/questions/46728036/detecting-if-an-tap-event-with-arcore-hits-an-already-added-3d-object
+  // https://github.com/hl3hl3/ARCoreMeasure/blob/master/app/src/main/java/com/hl3hl3/arcoremeasure/ArMeasureActivity.java
+  private fun isMotionEventApproxHitLocation(location: LocationModel, event: MotionEvent): Boolean {
+    Matrix.multiplyMV(vertexResult, 0, location.modelViewProjectionMatrix, 0, centerVertexOfCube, 0)
+    /**
+     * vertexResult = [x, y, z, w]
+     *
+     * coordinates in View
+     * ┌─────────────────────────────────────────┐╮
+     * │[0, 0]                     [viewWidth, 0]│
+     * │       [viewWidth/2, viewHeight/2]       │view height
+     * │[0, viewHeight]   [viewWidth, viewHeight]│
+     * └─────────────────────────────────────────┘╯
+     * ╰                view width               ╯
+     *
+     * coordinates in GLSurfaceView frame
+     * ┌─────────────────────────────────────────┐╮
+     * │[-1.0,  1.0]                  [1.0,  1.0]│
+     * │                 [0, 0]                  │view height
+     * │[-1.0, -1.0]                  [1.0, -1.0]│
+     * └─────────────────────────────────────────┘╯
+     * ╰                view width               ╯
+     */
+    // circle hit test
+    val radius = virtualSceneFramebuffer.width / 2 * (CUBE_HIT_AREA_RADIUS / vertexResult[3])
+    val dx = event.x - virtualSceneFramebuffer.width / 2 * (1 + vertexResult[0] / vertexResult[3])
+    val dy = event.y - virtualSceneFramebuffer.height / 2 * (1 - vertexResult[1] / vertexResult[3])
+    return dx * dx + dy * dy < radius * radius
+  }
+
+  private fun getTapSemantics(frame: Frame, event: MotionEvent): SemanticsLabel {
+    return try {
+      frame.acquireSemanticImage().use { semanticsImage ->
+        // The semantics image has a single plane, which stores labels for each pixel as 8-bit
+        // unsigned integers.
+        val plane = semanticsImage.planes[0]
+        val byteIndex = event.x.toInt() * plane.pixelStride + event.y.toInt() * plane.rowStride
+        SemanticsLabel.values()[plane.buffer.get(byteIndex).toInt()]
+      }
+    } catch (e: NotYetAvailableException) {
+      // Semantics data is not available yet.
+      SemanticsLabel.UNLABELED
+    }
+  }
+
+  private fun getSemanticsConfidence(frame: Frame, event: MotionEvent): Float {
+    return try {
+      frame.acquireSemanticConfidenceImage().use { confidenceImage ->
+        // The confidence image has a single plane, which stores labels for each pixel as 8-bit
+        // floating point numbers.
+        val plane = confidenceImage.planes[0]
+        val byteIndex = event.x.toInt() * plane.pixelStride + event.y.toInt() * plane.rowStride
+        plane.buffer.order(ByteOrder.nativeOrder()).getFloat(byteIndex)
+      }
+    } catch (e: NotYetAvailableException) {
+      0f
+    }
+  }
 }
