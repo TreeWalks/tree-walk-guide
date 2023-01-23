@@ -32,6 +32,6 @@
         android:persistent="false"
         android:title="@string/companion_website"
         android:summary="@string/companion_website_navigate"
-        android:icon="@drawable/baseline_open_in_new_24"/>
+        android:icon="@drawable/baseline_open_in_new_light_24"/>
 
 </PreferenceScreen>
