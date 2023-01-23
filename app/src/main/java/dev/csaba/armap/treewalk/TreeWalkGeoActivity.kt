@@ -130,7 +130,6 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       .build()
 
     val fabSubBuilder: SubActionButton.Builder = SubActionButton.Builder(this)
-    val numbersIcon = ImageView(this)
     val waterDropIcon = ImageView(this)
     val translateIcon = ImageView(this)
     val informationIcon = ImageView(this)
@@ -145,7 +144,6 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     // Set default SubActionButtons
     val circularMenu: FloatingActionMenu = FloatingActionMenu.Builder(this)
       .setRadius(500)
-      .addSubActionView(fabSubBuilder.setContentView(numbersIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(waterDropIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(translateIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(informationIcon).build(), 196, 196)
