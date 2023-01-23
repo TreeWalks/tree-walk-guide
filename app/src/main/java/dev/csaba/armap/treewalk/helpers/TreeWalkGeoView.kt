@@ -30,7 +30,9 @@ class TreeWalkGeoView(val activity: TreeWalkGeoActivity) : DefaultLifecycleObser
   val surfaceView: GLSurfaceView = root.findViewById(R.id.surfaceview)
 
   val snackbarHelper = SnackbarHelper()
-  val tapHelper = TapHelper(activity).also { surfaceView.setOnTouchListener(it) }
+  val tapHelper = TapHelper(activity).also {
+    surfaceView.setOnTouchListener(it)
+  }
 
   override fun onResume(owner: LifecycleOwner) {
     surfaceView.onResume()
