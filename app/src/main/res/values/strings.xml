@@ -36,6 +36,7 @@
   <string name="target_stop_desc">The number of currently targeted stop</string>
   <string name="visited">Congratulations! You visited</string>
   <string name="watering_can">Watering can</string>
+  <string name="watering_trees">Watering trees!</string>
   <string name="watering_in_progress">Watering in progress…</string>
   <string name="game_info">Game information</string>
   <string name="score">Score</string>
@@ -49,4 +50,5 @@
   <string name="description">description</string>
   <string name="web_page">Web page</string>
   <string name="page">Page</string>
+  <string name="screen_shot">Screen Shot</string>
 </resources>

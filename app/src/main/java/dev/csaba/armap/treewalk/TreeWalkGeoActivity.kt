@@ -131,14 +131,6 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     return (targetStopIndex + 1) % renderer.stops.size
   }
 
-  private fun nextStopNumber(): Int {
-    if (renderer.stops.isEmpty()) {
-      return -1
-    }
-
-    return nextStopIndex() + 1
-  }
-
   private fun createCircularFABMenu() {
     // Set up the white button on the lower right corner
     // more or less with default parameter
@@ -155,7 +147,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     val settingsIcon = ImageView(this)
     val gameIcon = ImageView(this)
 
-    waterDropIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_water_drop_24))
+    waterDropIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_shower_24))
     translateIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_translate_24))
     informationIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_info_outline_24))
     settingsIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_settings_24))
@@ -210,17 +202,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
       if (!wateringInProgress && appState != AppState.WATERING_IN_PROGRESS) {
         when (appState) {
-          AppState.WATERING_MODE -> {
-            val nextStopString = resources.getString(R.string.move_to_next_stop)
-            val nextNumberString = " ${nextStopNumber()}. "
-            val nextStopData = renderer.stops[nextStopIndex()]
-            val nextStopTitle = nextStopData.getLocalizedTitle(currentLanguage)
-            showMessage(nextStopString + nextNumberString + nextStopTitle)
-            appState = AppState.TARGETING_STOP
-          }
+          AppState.WATERING_MODE -> {}
 
           AppState.TARGETING_STOP -> {
             showResourceMessage(R.string.tree_watering)
+            showWateringDialog()
             appState = AppState.WATERING_MODE
           }
 
@@ -627,7 +613,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
   }
 
-  fun unlockAchievement(stopIndex: Int) {
+  private fun unlockAchievement(stopIndex: Int) {
     val achievementId = when (stopIndex) {
       0 -> R.string.achievement_stop_1_visited
       1 -> R.string.achievement_stop_2_visited
@@ -661,23 +647,16 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   }
 
   private fun wateringBonus() {
-    score += 10
+    score += 50
   }
 
-  fun submitScore() {
+  private fun submitScore() {
     leaderboardsClient?.submitScore(getString(R.string.leaderboard_tree_walk), score)
   }
 
   private fun speak(text: String) {
     // TODO: should be suspend function?
     textToSpeech?.speak(text,TextToSpeech.QUEUE_FLUSH, null, null)
-  }
-
-  fun showError(errorMessage: String, allowSpeak: Boolean = true) {
-    view.snackbarHelper.showError(this, errorMessage)
-    if (speakEnabled && allowSpeak) {
-      speak(errorMessage)
-    }
   }
 
   fun showMessage(message: String, allowSpeak: Boolean = true) {
@@ -691,7 +670,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     showMessage(resources.getString(messageId), allowSpeak)
   }
 
-  fun performWatering() {
+  private fun performWatering() {
     if (appState == AppState.WATERING_IN_PROGRESS) {
       return
     }
@@ -708,8 +687,41 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     mediaPlayer = null
   }
 
-  private fun playSound(ctx: Context?, rid: Int) {
-    if (rid == 0) {
+  private fun showWateringDialog() {
+    val wateringDialog = AlertDialog.Builder(this).create()
+    wateringDialog.setTitle(R.string.watering_trees)
+    val dialogView: View =
+      LayoutInflater.from(this).inflate(R.layout.watering_dialog, null)
+    wateringDialog.setView(dialogView)
+
+    val positiveButtonClick = { _: DialogInterface, _: Int ->
+      fabMenuIcon?.setImageDrawable(
+        ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_add_24)
+      )
+      wateringDialog.dismiss()
+    }
+    wateringDialog.setButton(
+      DialogInterface.BUTTON_POSITIVE,
+      "OK",
+      OnClickListener(function = positiveButtonClick)
+    )
+
+    val imageView = findViewById<View>(R.id.blended_image_view) as ImageView
+    val bitmap = renderer.getSemanticsBlendedFrame() ?: return
+    imageView.setImageBitmap(bitmap)
+    imageView.setOnTouchListener { view, motionEvent ->
+      if (bitmap.getPixel(motionEvent.x.toInt(), motionEvent.y.toInt()) > 0) {
+        performWatering()
+      }
+
+      return@setOnTouchListener true
+    }
+
+    wateringDialog.show()
+  }
+
+  private fun playSound(ctx: Context?, resourceId: Int) {
+    if (resourceId == 0) {
       return
     }
 
@@ -720,9 +732,6 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       wateringBonus()
       if (appState == AppState.WATERING_IN_PROGRESS) {
         appState = AppState.WATERING_MODE
-        fabMenuIcon?.setImageDrawable(
-          ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_add_24)
-        )
       }
     }
 
@@ -730,7 +739,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   }
 
   fun advanceStop(currentTitle: String) {
-    unlockAchievement(targetStopIndex)
+    // unlockAchievement(targetStopIndex)
     val nextStopString = resources.getString(R.string.visited)
     val stopNumberString = " ${targetStopNumber()}. "
     showMessage(nextStopString + stopNumberString + currentTitle)

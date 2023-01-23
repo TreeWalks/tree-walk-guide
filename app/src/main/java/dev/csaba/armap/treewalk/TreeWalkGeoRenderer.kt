@@ -1,9 +1,13 @@
 package dev.csaba.armap.treewalk
 
+import android.graphics.Bitmap
 import android.location.Location
 import android.opengl.Matrix
 import android.util.Log
 import android.view.MotionEvent
+import androidx.core.graphics.get
+import androidx.core.graphics.scale
+import androidx.core.graphics.set
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
@@ -19,6 +23,7 @@ import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
 import dev.csaba.armap.treewalk.data.*
+import dev.csaba.armap.treewalk.helpers.imageToBitmap
 import dev.csaba.armap.treewalk.helpers.splitAndCleanse
 import dev.csaba.armap.treewalk.helpers.zipMulti
 import kotlinx.coroutines.launch
@@ -432,7 +437,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         anchored = false
         createAnchors()
       }
-    } else if (activity.appState == AppState.WATERING_MODE) {
+    }
+    /*
+    else if (activity.appState == AppState.WATERING_MODE) {
       val cameraPose = earth.cameraGeospatialPose
       val stop = stops[activity.targetStopIndex]
       if (!isGpsInGeoFence(cameraPose.latitude, cameraPose.longitude, stop)) {
@@ -448,6 +455,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         activity.showResourceMessage(R.string.click_a_tree)
       }
     }
+   */
   }
 
   private fun isGpsInGeoFence(lat: Double, lon: Double, location: LocationData): Boolean {
@@ -515,6 +523,46 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       }
     } catch (e: NotYetAvailableException) {
       0f
+    }
+  }
+
+  fun getSemanticsBlendedFrame(): Bitmap? {
+    val session = session ?: return null
+    val frame =
+      try {
+        session.update()
+      } catch (e: CameraNotAvailableException) {
+        Log.e(TAG, "Camera not available during getSemanticsBlendedFrame", e)
+        return null
+      }
+
+    try {
+      val semanticsPlane = frame.acquireSemanticImage().planes[0]
+      val confidencePlane = frame.acquireSemanticConfidenceImage().planes[0]
+
+      val cameraImage = frame.acquireCameraImage()
+      val cameraBitmap = imageToBitmap(cameraImage) ?: return null
+
+      val halfWidth = virtualSceneFramebuffer.width / 2
+      val halfHeight = virtualSceneFramebuffer.height / 2
+      val shrankBitmap = cameraBitmap.scale(halfWidth, halfHeight)
+      for (x in 0 until halfWidth step 1) {
+        for (y in 0 until halfHeight step 1) {
+          val byteIndex = 2 * (x * semanticsPlane.pixelStride + y * semanticsPlane.rowStride)
+          if (semanticsPlane.buffer.get(byteIndex).toInt() != SemanticsLabel.TREE.ordinal) {
+            shrankBitmap[x, y] = 0
+          } else {
+            val byteIndex2 = x * confidencePlane.pixelStride + y * confidencePlane.rowStride
+            val conf = confidencePlane.buffer.order(ByteOrder.nativeOrder()).getFloat(byteIndex2)
+            val colorOffset = ((1.0 - conf) * 128).toInt()
+            shrankBitmap[x, y] = shrankBitmap[x, y] + colorOffset
+          }
+        }
+      }
+
+      return shrankBitmap
+    } catch (e: NotYetAvailableException) {
+      return null
     }
   }
 }
