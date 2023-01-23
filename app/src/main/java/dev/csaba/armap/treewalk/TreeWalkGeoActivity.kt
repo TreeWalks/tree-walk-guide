@@ -224,10 +224,14 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       val dialogView: View =
         LayoutInflater.from(this).inflate(R.layout.game_dialog, null)
       gameDialog.setView(dialogView)
-      val positiveButtonClick = { dialog: DialogInterface, which: Int ->
+      val positiveButtonClick = { _: DialogInterface, _: Int ->
         gameDialog.dismiss()
       }
-      gameDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", OnClickListener(function = positiveButtonClick))
+      gameDialog.setButton(
+        DialogInterface.BUTTON_POSITIVE,
+        "OK",
+        OnClickListener(function = positiveButtonClick)
+      )
 
       val scoreText: TextView = dialogView.findViewById(R.id.scoreNumberText) as TextView
       scoreText.text = score.toString()
@@ -239,6 +243,66 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       achievementsButton.setOnClickListener { showAchievements() }
 
       gameDialog.show()
+    }
+
+    informationIcon.setOnClickListener {
+      val infoDialog = AlertDialog.Builder(this).create()
+      val dialogView: View =
+        LayoutInflater.from(this).inflate(R.layout.info_dialog, null)
+      infoDialog.setView(dialogView)
+
+      val stop = renderer.stops[targetStopIndex]
+
+      val positiveButtonClick = { _: DialogInterface, _: Int ->
+        infoDialog.dismiss()
+      }
+      infoDialog.setButton(
+        DialogInterface.BUTTON_POSITIVE,
+        "OK",
+        OnClickListener(function = positiveButtonClick)
+      )
+
+      val negativeButtonClick = { _: DialogInterface, _: Int ->
+        openBrowserWindow(stop.getLocalizedUrl(currentLanguage), this.baseContext)
+      }
+      infoDialog.setButton(
+        DialogInterface.BUTTON_NEGATIVE,
+        resources.getString(R.string.page),
+        OnClickListener(function = negativeButtonClick)
+      )
+
+      val nameTitle: TextView = dialogView.findViewById(R.id.nameTitle) as TextView
+      nameTitle.text = "${targetStopNumber()}. ${stop.getLocalizedTitle(currentLanguage)}"
+
+      val latinNameText: TextView = dialogView.findViewById(R.id.latinNameText) as TextView
+      if (stop.scientificName.isNotEmpty()) {
+        latinNameText.text = stop.scientificName
+      } else {
+        latinNameText.visibility = View.GONE
+      }
+
+      val heightText: TextView = dialogView.findViewById(R.id.heightText) as TextView
+      if (stop.height.isNotEmpty()) {
+        heightText.text = "${stop.height} '"
+      } else {
+        val heightTitle: TextView = dialogView.findViewById(R.id.heightTitle) as TextView
+        heightTitle.visibility = View.GONE
+        heightText.visibility = View.GONE
+      }
+
+      val widthText: TextView = dialogView.findViewById(R.id.widthText) as TextView
+      if (stop.width.isNotEmpty()) {
+        widthText.text = "${stop.width} '"
+      } else {
+        val widthTitle: TextView = dialogView.findViewById(R.id.widthTitle) as TextView
+        widthTitle.visibility = View.GONE
+        widthText.visibility = View.GONE
+      }
+
+      val descriptionText: TextView = dialogView.findViewById(R.id.descriptionText) as TextView
+      descriptionText.text = stop.getLocalizedDescription(currentLanguage)
+
+      infoDialog.show()
     }
 
     // Listen menu open and close events to animate the button content view

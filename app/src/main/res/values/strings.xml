@@ -41,4 +41,12 @@
   <string name="score">Score</string>
   <string name="leaderboard">Leaderboard…</string>
   <string name="achievements">Achievements…</string>
+  <string name="alternate_names">Other common names</string>
+  <string name="latin_name">Scientific name</string>
+  <string name="latin_alternates">Scientific name synonyms</string>
+  <string name="height">Height</string>
+  <string name="width">Width</string>
+  <string name="description">description</string>
+  <string name="web_page">Web page</string>
+  <string name="page">Page</string>
 </resources>

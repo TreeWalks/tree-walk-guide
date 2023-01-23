@@ -56,4 +56,12 @@
   <string name="score">Puntaje:</string>
   <string name="leaderboard">Posiciones…</string>
   <string name="achievements">Logros…</string>
+  <string name="alternate_names">Nombres Alternativos</string>
+  <string name="latin_name">Nombre científico</string>
+  <string name="latin_alternates">Sinonimos de nombres cientificos</string>
+  <string name="height">Altura</string>
+  <string name="width">Ancho</string>
+  <string name="description">descripción</string>
+  <string name="web_page">Página web</string>
+  <string name="page">Página</string>
 </resources>

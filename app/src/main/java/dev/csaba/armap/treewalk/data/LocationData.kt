@@ -65,4 +65,18 @@ data class LocationData(
             else -> englishData.title
         }
     }
+
+    fun getLocalizedDescription(language: String): String {
+        return when (language) {
+            "es" -> spanishData.description
+            else -> englishData.description
+        }
+    }
+
+    fun getLocalizedUrl(language: String): String {
+        return when (language) {
+            "es" -> spanishData.url
+            else -> englishData.url
+        }
+    }
 }
