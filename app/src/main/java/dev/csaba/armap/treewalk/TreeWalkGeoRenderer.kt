@@ -70,7 +70,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   // private val wateringCanModel = LocationModel(LatLng(0.0, 0.0), ObjectKind.WATERING_CAN)
   private var scaffolded = false  // The stops array were scaffolded, but no anchors yet
   private var anchoring = false  // Anchors are created into the scaffold
-  private var anchored = false  // Anchors were created as well into the scaffold
+  var anchored = false  // Anchors were created as well into the scaffold
 
   private val session
     get() = activity.arCoreSessionHelper.session
@@ -276,7 +276,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     createAnchorsCoreCore(nextLocRenderModel, nextStop.locationModel, earth)
   }
 
-  private fun createAnchors() {
+  fun createAnchors() {
     if (anchoring || anchored) {
       return
     }

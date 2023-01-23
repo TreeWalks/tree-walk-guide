@@ -21,6 +21,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
 import android.content.Intent
+import android.content.SharedPreferences
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -246,6 +247,13 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
 
     informationIcon.setOnClickListener {
+      val currentStop = readCurrentStopFromPreferences(getPreferences(Context.MODE_PRIVATE))
+      if (currentStop != targetStopIndex) {
+        targetStopIndex = currentStop
+        renderer.anchored = false
+        renderer.createAnchors()
+      }
+
       val infoDialog = AlertDialog.Builder(this).create()
       val dialogView: View =
         LayoutInflater.from(this).inflate(R.layout.info_dialog, null)
@@ -428,6 +436,13 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     disposable.dispose()
   }
 
+  private fun readCurrentStopFromPreferences(sharedPref: SharedPreferences): Int {
+    val unsanitizedTargetStop = sharedPref.getInt("current_stop", 1)
+    val sanitizedTargetStop =
+      min(unsanitizedTargetStop, renderer.stops.size - 1).coerceAtLeast(1)
+    return sanitizedTargetStop - 1
+  }
+
   @OptIn(ExperimentalCoroutinesApi::class)
   private suspend fun downloadAllDataAsync() = coroutineScope {
     async {
@@ -450,10 +465,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         )
 
         if (appState == AppState.INITIALIZING) {
-          val unsanitizedTargetStop = sharedPref.getInt("current_stop", 1)
-          val sanitizedTargetStop =
-            min(unsanitizedTargetStop, renderer.stops.size - 1).coerceAtLeast(1)
-          targetStopIndex = sanitizedTargetStop - 1
+          targetStopIndex = readCurrentStopFromPreferences(sharedPref)
           appState = AppState.TARGETING_STOP
         }
       }
@@ -658,7 +670,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
 
     stopSound()
-    mediaPlayer = MediaPlayer.create(ctx, rid)
+    mediaPlayer = MediaPlayer.create(ctx, resourceId)
     mediaPlayer?.setOnCompletionListener {
       stopSound()
       wateringBonus()
