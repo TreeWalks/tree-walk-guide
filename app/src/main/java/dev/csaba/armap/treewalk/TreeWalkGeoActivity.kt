@@ -17,6 +17,7 @@ package dev.csaba.armap.treewalk
 
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -53,6 +54,7 @@ import okhttp3.OkHttpClient
 import java.io.File
 import java.io.FileReader
 import java.util.*
+import kotlin.math.min
 
 
 class TreeWalkGeoActivity : AppCompatActivity() {
@@ -344,6 +346,16 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           deferredLocationEn.getCompleted(),
           deferredLocationEs.getCompleted()
         )
+
+        if (appState == AppState.INITIALIZING) {
+          val sharedPref = getPreferences(Context.MODE_PRIVATE)
+          val savedTargetStopText = sharedPref.getString("target_stop", "1") ?: "1"
+          val unsanitizedTargetStop = Integer.valueOf(savedTargetStopText)
+          val sanitizedTargetStop =
+            min(unsanitizedTargetStop, renderer.stops.size - 1).coerceAtLeast(1)
+          targetStopIndex = if (sanitizedTargetStop > 0) sanitizedTargetStop - 1 else renderer.stops.size - 1
+          appState = AppState.TARGETING_STOP
+        }
       }
 
       return@async
