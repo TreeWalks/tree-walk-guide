@@ -17,14 +17,12 @@ package dev.csaba.armap.treewalk.helpers
 
 import android.opengl.GLSurfaceView
 import android.view.View
-import android.widget.TextView
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.google.ar.core.Earth
-import com.google.ar.core.GeospatialPose
 import dev.csaba.armap.treewalk.TreeWalkGeoActivity
 import dev.csaba.armap.treewalk.R
 import dev.csaba.armap.common.helpers.SnackbarHelper
+import dev.csaba.armap.common.helpers.TapHelper
 
 /** Contains UI elements for Tree Walk Geo. */
 class TreeWalkGeoView(val activity: TreeWalkGeoActivity) : DefaultLifecycleObserver {
@@ -32,6 +30,7 @@ class TreeWalkGeoView(val activity: TreeWalkGeoActivity) : DefaultLifecycleObser
   val surfaceView: GLSurfaceView = root.findViewById(R.id.surfaceview)
 
   val snackbarHelper = SnackbarHelper()
+  val tapHelper = TapHelper(activity).also { surfaceView.setOnTouchListener(it) }
 
   override fun onResume(owner: LifecycleOwner) {
     surfaceView.onResume()

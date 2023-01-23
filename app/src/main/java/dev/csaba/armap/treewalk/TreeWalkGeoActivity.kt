@@ -17,11 +17,19 @@ package dev.csaba.armap.treewalk
 
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.content.Context
+import android.content.DialogInterface
+import android.content.DialogInterface.OnClickListener
+import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -43,6 +51,7 @@ import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu
 import com.oguzdev.circularfloatingactionmenu.library.SubActionButton
 import dev.csaba.armap.common.helpers.FullScreenHelper
 import dev.csaba.armap.common.samplerender.SampleRender
+import dev.csaba.armap.treewalk.data.AppState
 import dev.csaba.armap.treewalk.helpers.*
 import io.reactivex.disposables.Disposables
 import io.reactivex.plugins.RxJavaPlugins
@@ -51,6 +60,7 @@ import okhttp3.OkHttpClient
 import java.io.File
 import java.io.FileReader
 import java.util.*
+import kotlin.math.min
 
 
 class TreeWalkGeoActivity : AppCompatActivity() {
@@ -59,7 +69,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     private const val LOCATIONS_FILE_NAME = "locations.xml"
     private const val LOCATIONS_EN_FILE_NAME = "locations_es.xml"
     private const val LOCATIONS_ES_FILE_NAME = "locations_en.xml"
-    private const val WEBSITE_URL = "https://treewalks.github.io/"
+    const val WEBSITE_URL = "https://treewalks.github.io/"
     private const val DEFAULT_LANGUAGE = "en"
   }
 
@@ -77,7 +87,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       field = value
       textToSpeech?.language = value
     }
-  private var currentLanguage = DEFAULT_LANGUAGE
+  var currentLanguage = DEFAULT_LANGUAGE
     set(value) {
       field = value
       currentLocale = Locale.forLanguageTag(value)
@@ -89,6 +99,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   private var leaderboardsClient: LeaderboardsClient? = null
   private var score = 0L
   var targetStopIndex = -1
+  var appState: AppState = AppState.INITIALIZING
+  var speak = false
+  var wateringInProgress = false
+  private var mediaPlayer: MediaPlayer? = null
+  private var fabMenuIcon: ImageView? = null
 
   fun targetStopNumber(): Int {
     return if (targetStopIndex >= 0) targetStopIndex + 1 else targetStopIndex
@@ -106,7 +121,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     return (targetStopIndex + 1) % renderer.stops.size
   }
 
-  fun nextStopNumber(): Int {
+  private fun nextStopNumber(): Int {
     if (renderer.stops.isEmpty()) {
       return -1
     }
@@ -124,41 +139,28 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       .build()
 
     val fabSubBuilder: SubActionButton.Builder = SubActionButton.Builder(this)
-    val doneIcon = ImageView(this)
-    val numbersIcon = ImageView(this)
-    val voiceOnOffIcon = ImageView(this)
-    val wifiScanIcon = ImageView(this)
+    val waterDropIcon = ImageView(this)
     val translateIcon = ImageView(this)
     val informationIcon = ImageView(this)
-    val devModeIcon = ImageView(this)
+    val settingsIcon = ImageView(this)
+    val gameIcon = ImageView(this)
 
-    doneIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_done_24))
-    numbersIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_numbers_24))
-    voiceOnOffIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_volume_up_24))
-    wifiScanIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_perm_scan_wifi_24))
+    waterDropIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_water_drop_24))
     translateIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_translate_24))
     informationIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_info_outline_24))
-    devModeIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_developer_mode_24))
+    settingsIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_settings_24))
+    gameIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_leaderboard_24))
 
     // Build the menu with default options: light theme, 90 degrees, 72dp radius.
     // Set default SubActionButtons
-    var circularMenuBuilder: FloatingActionMenu.Builder = FloatingActionMenu.Builder(this)
-      .setRadius(600)
-      .addSubActionView(fabSubBuilder.setContentView(doneIcon).build(), 196, 196)
-      .addSubActionView(fabSubBuilder.setContentView(numbersIcon).build(), 196, 196)
-      .addSubActionView(fabSubBuilder.setContentView(voiceOnOffIcon).build(), 196, 196)
-
-    if (hasSemanticApi) {
-      circularMenuBuilder = circularMenuBuilder
-        .addSubActionView(fabSubBuilder.setContentView(wifiScanIcon).build(), 196, 196)
-    }
-
-    circularMenuBuilder = circularMenuBuilder
+    val circularMenu: FloatingActionMenu = FloatingActionMenu.Builder(this)
+      .setRadius(500)
+      .addSubActionView(fabSubBuilder.setContentView(waterDropIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(translateIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(informationIcon).build(), 196, 196)
-      .addSubActionView(fabSubBuilder.setContentView(devModeIcon).build(), 196, 196)
-
-    val circularMenu: FloatingActionMenu = circularMenuBuilder.attachTo(rightLowerButton).build()
+      .addSubActionView(fabSubBuilder.setContentView(settingsIcon).build(), 196, 196)
+      .addSubActionView(fabSubBuilder.setContentView(gameIcon).build(), 196, 196)
+      .attachTo(rightLowerButton).build()
 
     translateIcon.setOnClickListener {
       val builder = AlertDialog.Builder(this)
@@ -184,8 +186,59 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       builder.show()
     }
 
-    devModeIcon.setOnClickListener {
-      view.snackbarHelper.showMessage(this, "Dev Mode!")
+    settingsIcon.setOnClickListener {
+      // Intent to open settings activity.
+      val settingsIntent = Intent(this, SettingsActivity::class.java)
+      startActivity(settingsIntent)
+    }
+
+    waterDropIcon.setOnClickListener {
+      if (targetStopIndex < 0) {
+        showResourceMessage(R.string.missing_target)
+        appState = AppState.LOOKING_FOR_CLOSEST_STOP
+      }
+
+      if (!wateringInProgress && appState != AppState.WATERING_IN_PROGRESS) {
+        when (appState) {
+          AppState.WATERING_MODE -> {
+            val nextStopString = resources.getString(R.string.move_to_next_stop)
+            val nextNumberString = " ${nextStopNumber()}. "
+            val nextStopData = renderer.stops[nextStopIndex()]
+            val nextStopTitle = nextStopData.getLocalizedTitle(currentLanguage)
+            showMessage(nextStopString + nextNumberString + nextStopTitle)
+            appState = AppState.TARGETING_STOP
+          }
+
+          AppState.TARGETING_STOP -> {
+            showResourceMessage(R.string.tree_watering)
+            appState = AppState.WATERING_MODE
+          }
+
+          else -> showResourceMessage(R.string.wrong_mode)
+        }
+      }
+    }
+
+    gameIcon.setOnClickListener {
+      val gameDialog = AlertDialog.Builder(this).create()
+      val dialogView: View =
+        LayoutInflater.from(this).inflate(R.layout.game_dialog, null)
+      gameDialog.setView(dialogView)
+      val positiveButtonClick = { dialog: DialogInterface, which: Int ->
+        gameDialog.dismiss()
+      }
+      gameDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", OnClickListener(function = positiveButtonClick))
+
+      val scoreText: TextView = dialogView.findViewById(R.id.scoreNumberText) as TextView
+      scoreText.text = score.toString()
+
+      val leaderboardButton: Button = dialogView.findViewById(R.id.leaderboardButton) as Button
+      leaderboardButton.setOnClickListener { showTopPlayers() }
+
+      val achievementsButton: Button = dialogView.findViewById(R.id.achievementsButton) as Button
+      achievementsButton.setOnClickListener { showAchievements() }
+
+      gameDialog.show()
     }
 
     // Listen menu open and close events to animate the button content view
@@ -307,7 +360,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
   override fun onDestroy() {
     super.onDestroy()
-    textToSpeech?.shutdown();
+    textToSpeech?.shutdown()
     disposable.dispose()
   }
 
@@ -331,6 +384,16 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           deferredLocationEn.getCompleted(),
           deferredLocationEs.getCompleted()
         )
+
+        if (appState == AppState.INITIALIZING) {
+          val sharedPref = getPreferences(Context.MODE_PRIVATE)
+          val savedTargetStopText = sharedPref.getString("target_stop", "1") ?: "1"
+          val unsanitizedTargetStop = Integer.valueOf(savedTargetStopText)
+          val sanitizedTargetStop =
+            min(unsanitizedTargetStop, renderer.stops.size - 1).coerceAtLeast(1)
+          targetStopIndex = if (sanitizedTargetStop > 0) sanitizedTargetStop - 1 else renderer.stops.size - 1
+          appState = AppState.TARGETING_STOP
+        }
       }
 
       return@async
@@ -434,14 +497,14 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     FullScreenHelper.setFullScreenOnWindowFocusChanged(this, hasFocus)
   }
 
-  fun showAchievements() {
-    achievementClient?.achievementsIntent?.addOnSuccessListener { intent ->
+  private fun showTopPlayers() {
+    leaderboardsClient?.allLeaderboardsIntent?.addOnSuccessListener {intent ->
       startActivityForResult(intent, 0)
     }
   }
 
-  fun showTopPlayers() {
-    leaderboardsClient?.allLeaderboardsIntent?.addOnSuccessListener {intent ->
+  private fun showAchievements() {
+    achievementClient?.achievementsIntent?.addOnSuccessListener { intent ->
       startActivityForResult(intent, 0)
     }
   }
@@ -476,13 +539,75 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
     achievementClient?.unlock(getString(achievementId))
     score += 1000
+    submitScore()
+  }
+
+  private fun wateringBonus() {
+    score += 10
   }
 
   fun submitScore() {
     leaderboardsClient?.submitScore(getString(R.string.leaderboard_tree_walk), score)
   }
 
-  fun speak(text: String) {
+  private fun speak(text: String) {
+    // TODO: should be suspend function?
     textToSpeech?.speak(text,TextToSpeech.QUEUE_FLUSH, null, null)
+  }
+
+//  fun showError(errorMessage: String, allowSpeak: Boolean = true) {
+//    view.snackbarHelper.showError(this, errorMessage)
+//    if (speak && allowSpeak) {
+//      speak(errorMessage)
+//    }
+//  }
+
+  fun showMessage(message: String, allowSpeak: Boolean = true) {
+    view.snackbarHelper.showMessage(this, message)
+    if (speak && allowSpeak) {
+      speak(message)
+    }
+  }
+
+  fun showResourceMessage(messageId: Int, allowSpeak: Boolean = true) {
+    showMessage(resources.getString(messageId), allowSpeak)
+  }
+
+  fun performWatering() {
+    if (appState == AppState.WATERING_IN_PROGRESS) {
+      return
+    }
+
+    appState = AppState.WATERING_IN_PROGRESS
+    fabMenuIcon?.setImageDrawable(
+      ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_shower_24)
+    )
+    playSound(this.baseContext, R.raw.watering)
+  }
+
+  private fun stopSound() {
+    mediaPlayer?.release()
+    mediaPlayer = null
+  }
+
+  private fun playSound(ctx: Context?, rid: Int) {
+    if (rid == 0) {
+      return
+    }
+
+    stopSound()
+    mediaPlayer = MediaPlayer.create(ctx, rid)
+    mediaPlayer?.setOnCompletionListener {
+      stopSound()
+      wateringBonus()
+      if (appState == AppState.WATERING_IN_PROGRESS) {
+        appState = AppState.WATERING_MODE
+        fabMenuIcon?.setImageDrawable(
+          ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_add_24)
+        )
+      }
+    }
+
+    mediaPlayer?.start()
   }
 }

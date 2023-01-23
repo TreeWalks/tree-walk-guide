@@ -1,15 +1,14 @@
 package dev.csaba.armap.treewalk.data
 
 import com.google.android.gms.maps.model.LatLng
-import com.google.ar.core.Earth
 
 data class LocationData(
     val gpsLocation: LatLng,
     val geoFenceNW: LatLng,
     val geoFenceSE: LatLng,
     val kind: ObjectKind,
-    val height: Int,
-    val width: Int,
+    val height: String,
+    val width: String,
     val englishData: LocalizedData,
     val spanishData: LocalizedData,
     val locationModel: LocationModel,
@@ -17,6 +16,7 @@ data class LocationData(
     val neGeoFenceModel: LocationModel,
     val seGeoFenceModel: LocationModel,
     val swGeoFenceModel: LocationModel,
+    var visited: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -58,11 +58,10 @@ data class LocationData(
         return result
     }
 
-    fun addAnchors(earth: Earth, hoverHeight: Double) {
-        locationModel.addAnchor(earth, hoverHeight)
-        nwGeoFenceModel.addAnchor(earth, hoverHeight)
-        neGeoFenceModel.addAnchor(earth, hoverHeight)
-        seGeoFenceModel.addAnchor(earth, hoverHeight)
-        swGeoFenceModel.addAnchor(earth, hoverHeight)
+    fun getLocalizedTitle(language: String): String {
+        return when (language) {
+            "es" -> spanishData.title
+            else -> englishData.title
+        }
     }
 }
