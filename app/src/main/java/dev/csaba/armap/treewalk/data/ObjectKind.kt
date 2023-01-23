@@ -6,9 +6,7 @@ enum class ObjectKind {
     GARDEN,
     TREE,
     TREES,
-    POST,
-    ARROW,
-    WATERING_CAN;
+    POST;
 
     companion object {
         fun getByName(name: String) = valueOf(name.uppercase(Locale.getDefault()))

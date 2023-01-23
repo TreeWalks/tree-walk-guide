@@ -48,8 +48,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   // Virtual objects
   private lateinit var mapPinMesh: Mesh
   private lateinit var downArrowMesh: Mesh
-  private lateinit var arrowMesh: Mesh
-  private lateinit var wateringCanMesh: Mesh
   private lateinit var redObjectShader: Shader
   private lateinit var greenObjectShader: Shader
   private lateinit var blueObjectShader: Shader
@@ -99,8 +97,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       // Virtual object to render (Geospatial Marker)
       mapPinMesh = Mesh.createFromAsset(render, "models/map_pin.obj")
       downArrowMesh = Mesh.createFromAsset(render, "models/down_arrow.obj")
-      arrowMesh = Mesh.createFromAsset(render, "models/arrow.obj")
-      wateringCanMesh = Mesh.createFromAsset(render, "models/watering_can.obj")
       redObjectShader =
         Shader.createFromAssets(
           render,
@@ -214,27 +210,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       }
     }
 
-    /*
-    if (activity.appState == AppState.TARGETING_STOP || activity.appState == AppState.WATERING_MODE || activity.appState == AppState.WATERING_IN_PROGRESS) {
-      // Dispose previous anchor because they are not stationary
-      wateringCanModel.anchor?.detach()
-      wateringCanModel.anchor = null
-      arrowModel.anchor?.detach()
-      arrowModel.anchor = null
-      // val cameraPose = camera.pose
-      if (activity.appState == AppState.TARGETING_STOP) {
-        // TODO: how to rotate the directional help arrow
-        //  arrowModel.anchor = session.createAnchor(cameraPose)
-      } else if (activity.appState == AppState.WATERING_MODE || activity.appState == AppState.WATERING_IN_PROGRESS) {
-        // Mostly SceneView unfortunately:
-        // https://stackoverflow.com/a/59662629/292502
-        // https://stackoverflow.com/a/55556746/292502
-         wateringCanModel.anchor = session.createAnchor(cameraPose.compose(Pose.makeTranslation(0f, -0.5f, -0.3f)))
-         render.renderObject(wateringCanModel, rotate=false, bounce=false)
-      }
-    }
-    */
-
     // Compose the virtual scene with the background.
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
   }
@@ -326,9 +301,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
-    if (renderModel.kind != ObjectKind.ARROW && renderModel.kind != ObjectKind.WATERING_CAN &&
-      renderModel.anchor?.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS)
-    {
+    if (renderModel.anchor?.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS) {
       return
     }
 
@@ -387,8 +360,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     val virtualObjectMesh = when (ObjectShape.getShape(renderModel.kind)) {
       ObjectShape.MAP_PIN -> mapPinMesh
       ObjectShape.DOWN_ARROW -> downArrowMesh
-      ObjectShape.ARROW -> arrowMesh
-      ObjectShape.WATERING_CAN -> wateringCanMesh
     }
 
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)

@@ -11,8 +11,6 @@ enum class ObjectColor {
             ObjectKind.TREE -> RED
             ObjectKind.TREES -> RED
             ObjectKind.POST -> GREEN
-            ObjectKind.ARROW -> RED
-            ObjectKind.WATERING_CAN -> BLUE
         }
     }
 }
