@@ -38,6 +38,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.coroutineScope
+import androidx.preference.PreferenceManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -247,7 +248,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
 
     informationIcon.setOnClickListener {
-      val currentStop = readCurrentStopFromPreferences(getPreferences(Context.MODE_PRIVATE))
+      val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+      val currentStop = readCurrentStopFromPreferences(sharedPref)
       if (currentStop != targetStopIndex) {
         targetStopIndex = currentStop
         renderer.anchored = false
@@ -691,7 +693,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     val stopNumberString = " ${targetStopNumber()}. "
     showMessage(nextStopString + stopNumberString + currentTitle)
     targetStopIndex = nextStopIndex()
-    val sharedPref = getPreferences(Context.MODE_PRIVATE)
+    val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
     with (sharedPref.edit()) {
       putInt("current_stop", targetStopNumber())
       apply()
