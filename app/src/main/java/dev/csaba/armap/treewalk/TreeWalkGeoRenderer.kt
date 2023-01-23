@@ -211,6 +211,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       }
     }
 
+    /*
     if (activity.appState == AppState.TARGETING_STOP || activity.appState == AppState.WATERING_TREES) {
       // Dispose previous anchor because they are not stationary
       wateringCanModel.anchor?.detach()
@@ -225,10 +226,11 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         // Mostly SceneView unfortunately:
         // https://stackoverflow.com/a/59662629/292502
         // https://stackoverflow.com/a/55556746/292502
-        // wateringCanModel.anchor = session.createAnchor(cameraPose.compose(Pose.makeTranslation(0f, -0.5f, -0.3f)))
-        // render.renderObject(wateringCanModel, rotate=false, bounce=false)
+         wateringCanModel.anchor = session.createAnchor(cameraPose.compose(Pose.makeTranslation(0f, -0.5f, -0.3f)))
+         render.renderObject(wateringCanModel, rotate=false, bounce=false)
       }
     }
+    */
 
     // Compose the virtual scene with the background.
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
