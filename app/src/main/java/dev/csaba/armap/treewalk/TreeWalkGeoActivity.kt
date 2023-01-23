@@ -248,8 +248,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
 
     informationIcon.setOnClickListener {
-      val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-      val currentStop = readCurrentStopFromPreferences(sharedPref)
+      val currentStop = readCurrentStopFromPreferences()
       if (currentStop != targetStopIndex) {
         targetStopIndex = currentStop
         renderer.anchored = false
@@ -438,7 +437,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     disposable.dispose()
   }
 
-  private fun readCurrentStopFromPreferences(sharedPref: SharedPreferences): Int {
+  private fun readCurrentStopFromPreferences(): Int {
+    val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
     val unsanitizedTargetStop = sharedPref.getInt("current_stop", 1)
     val sanitizedTargetStop =
       min(unsanitizedTargetStop, renderer.stops.size - 1).coerceAtLeast(1)
