@@ -34,4 +34,5 @@
   <string name="move_to_next_stop">Great job with the watering! Move to the next stop</string>
   <string name="target_stop">Target Stop Number</string>
   <string name="target_stop_desc">The number of currently targeted stop</string>
+  <string name="visited">Congratulations! You visited</string>
 </resources>

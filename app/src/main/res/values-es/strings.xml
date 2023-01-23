@@ -49,4 +49,5 @@
   <string name="move_to_next_stop">¡Buen trabajo con el riego! Mover a la siguiente parada</string>
   <string name="target_stop">Número de parada objetivo</string>
   <string name="target_stop_desc">El número de paradas apuntadas actualmente</string>
+  <string name="visited">¡Felicidades! Tu visitaste</string>
 </resources>

@@ -81,7 +81,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       field = value
       textToSpeech?.language = value
     }
-  private var currentLanguage = DEFAULT_LANGUAGE
+  var currentLanguage = DEFAULT_LANGUAGE
     set(value) {
       field = value
       currentLocale = Locale.forLanguageTag(value)
@@ -190,7 +190,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         val nextStopString = resources.getString(R.string.move_to_next_stop)
         val nextNumberString = " ${nextStopNumber()}. "
         val nextStopData = renderer.stops[nextStopIndex()]
-        val nextStopTitle = if (currentLanguage == "es") nextStopData.spanishData.title else nextStopData.englishData.title
+        val nextStopTitle = nextStopData.getLocalizedTitle(currentLanguage)
         showMessage(nextStopString + nextNumberString + nextStopTitle)
         appState = AppState.TARGETING_STOP
       } else if (appState == AppState.TARGETING_STOP) {
@@ -522,7 +522,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
   }
 
-  private fun showMessage(message: String, allowSpeak: Boolean = true) {
+  fun showMessage(message: String, allowSpeak: Boolean = true) {
     view.snackbarHelper.showMessage(this, message)
     if (speak && allowSpeak) {
       speak(message)

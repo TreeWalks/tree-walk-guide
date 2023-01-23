@@ -66,4 +66,11 @@ data class LocationData(
         seGeoFenceModel.addAnchor(earth, hoverHeight)
         swGeoFenceModel.addAnchor(earth, hoverHeight)
     }
+
+    fun getLocalizedTitle(language: String): String {
+        return when (language) {
+            "es" -> spanishData.title
+            else -> englishData.title
+        }
+    }
 }

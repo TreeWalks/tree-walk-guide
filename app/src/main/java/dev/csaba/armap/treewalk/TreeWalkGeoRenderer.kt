@@ -418,6 +418,11 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       if (isMotionEventApproxHitLocation(stop.locationModel, tap)) {
         stop.visited = true
         activity.unlockAchievement(activity.targetStopIndex)
+        val nextStopString = activity.resources.getString(R.string.visited)
+        val stopNumberString = " ${activity.targetStopNumber()}. "
+        val stopTitle = stop.getLocalizedTitle(activity.currentLanguage)
+        activity.showMessage(nextStopString + stopNumberString + stopTitle)
+        activity.targetStopIndex = activity.nextStopIndex()
       }
     } else if (activity.appState == AppState.WATERING_TREES) {
       val cameraPose = earth.cameraGeospatialPose
