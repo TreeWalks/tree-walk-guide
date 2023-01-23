@@ -742,7 +742,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   }
 
   fun advanceStop(currentTitle: String) {
-    // unlockAchievement(targetStopIndex)
+    unlockAchievement(targetStopIndex)
     val nextStopString = resources.getString(R.string.visited)
     val stopNumberString = " ${targetStopNumber()}. "
     showMessage(nextStopString + stopNumberString + currentTitle)
