@@ -386,12 +386,10 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         )
 
         if (appState == AppState.INITIALIZING) {
-          val sharedPref = getPreferences(Context.MODE_PRIVATE)
-          val savedTargetStopText = sharedPref.getString("target_stop", "1") ?: "1"
-          val unsanitizedTargetStop = Integer.valueOf(savedTargetStopText)
+          val unsanitizedTargetStop = sharedPref.getInt("current_stop", 1)
           val sanitizedTargetStop =
             min(unsanitizedTargetStop, renderer.stops.size - 1).coerceAtLeast(1)
-          targetStopIndex = if (sanitizedTargetStop > 0) sanitizedTargetStop - 1 else renderer.stops.size - 1
+          targetStopIndex = sanitizedTargetStop - 1
           appState = AppState.TARGETING_STOP
         }
       }
@@ -617,5 +615,10 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     val stopNumberString = " ${targetStopNumber()}. "
     showMessage(nextStopString + stopNumberString + currentTitle)
     targetStopIndex = nextStopIndex()
+    val sharedPref = getPreferences(Context.MODE_PRIVATE)
+    with (sharedPref.edit()) {
+      putInt("current_stop", targetStopNumber())
+      apply()
+    }
   }
 }

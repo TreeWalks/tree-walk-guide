@@ -7,12 +7,17 @@
     android:layout_height="match_parent"
     tools:context=".SettingsFragment">
 
-    <EditTextPreference
-        app:key="target_stop"
+    <SeekBarPreference
+        app:key="current_stop"
         app:title="@string/target_stop"
         app:summary="@string/target_stop_desc"
-        android:inputType="number"
-        android:maxLength="2"
+        app:defaultValue="1"
+        app:min="1"
+        app:seekBarIncrement="1"
+        android:max="24"
+        app:adjustable="true"
+        app:isPreferenceVisible="true"
+        app:showSeekBarValue="true"
         android:icon="@drawable/baseline_numbers_24"/>
 
     <SwitchPreferenceCompat
