@@ -61,6 +61,13 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   private val vertexResult = FloatArray(4)
 
   val stops: MutableList<LocationData> = emptyList<LocationData>().toMutableList()
+  private val locationRenderModel = RenderModel(LatLng(0.0, 0.0), ObjectKind.TREE)
+  private val nwGeoRenderModel = RenderModel(LatLng(0.0, 0.0), ObjectKind.POST)
+  private val neGeoRenderModel = RenderModel(LatLng(0.0, 0.0), ObjectKind.POST)
+  private val seGeoRenderModel = RenderModel(LatLng(0.0, 0.0), ObjectKind.POST)
+  private val swGeoRenderModel = RenderModel(LatLng(0.0, 0.0), ObjectKind.POST)
+  private val nextLocRenderModel = RenderModel(LatLng(0.0, 0.0), ObjectKind.TREE)
+
   // private val arrowModel = LocationModel(LatLng(0.0, 0.0), ObjectKind.ARROW)
   // private val wateringCanModel = LocationModel(LatLng(0.0, 0.0), ObjectKind.WATERING_CAN)
   private var scaffolded = false  // The stops array were scaffolded, but no anchors yet
@@ -191,19 +198,15 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     // Step 1.1.: Obtain Geospatial information and display it on the map.
     val earth = session.earth
     if (earth?.trackingState == TrackingState.TRACKING) {
-      if (anchored) {
+      if (anchored && activity.targetStopIndex >= 0) {
+        val stop = stops[activity.targetStopIndex]
         // Draw the placed anchors, if any exists and visible.
-        val nextStopIndex = activity.nextStopIndex()
-        for ((index, stop) in stops.withIndex()) {
-          // TODO: if current stop, if next stop (or if stop is close?)
-          val rotate = index == activity.targetStopIndex || index == nextStopIndex
-          val bounce = index == nextStopIndex
-          render.renderObject(stop.locationModel, rotate, bounce)
-          render.renderObject(stop.nwGeoFenceModel, rotate, bounce)
-          render.renderObject(stop.neGeoFenceModel, rotate, bounce)
-          render.renderObject(stop.seGeoFenceModel, rotate, bounce)
-          render.renderObject(stop.swGeoFenceModel, rotate, bounce)
-        }
+        render.renderObject(locationRenderModel, !stop.visited, false)
+        render.renderObject(nwGeoRenderModel, true, false)
+        render.renderObject(neGeoRenderModel, true, false)
+        render.renderObject(seGeoRenderModel, true, false)
+        render.renderObject(swGeoRenderModel, true, false)
+        render.renderObject(nextLocRenderModel, false, true)
       } else {
         if (scaffolded && !anchoring) {
           activity.lifecycle.coroutineScope.launch { createAnchors() }
@@ -280,6 +283,23 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     scaffolded = true
   }
 
+  private fun createAnchorsCoreCore(renderModel: RenderModel, locationModel: LocationModel, earth: Earth) {
+    renderModel.gpsLocation = locationModel.gpsLocation
+    renderModel.kind = locationModel.kind
+    renderModel.addAnchor(earth, HOVER_ABOVE_TERRAIN)
+  }
+
+  private fun createAnchorsCore(earth: Earth) {
+    val stop = stops[activity.targetStopIndex]
+    createAnchorsCoreCore(locationRenderModel, stop.locationModel, earth)
+    createAnchorsCoreCore(nwGeoRenderModel, stop.nwGeoFenceModel, earth)
+    createAnchorsCoreCore(neGeoRenderModel, stop.neGeoFenceModel, earth)
+    createAnchorsCoreCore(seGeoRenderModel, stop.seGeoFenceModel, earth)
+    createAnchorsCoreCore(swGeoRenderModel, stop.swGeoFenceModel, earth)
+    val nextStop = stops[activity.nextStopIndex()]
+    createAnchorsCoreCore(nextLocRenderModel, nextStop.locationModel, earth)
+  }
+
   private fun createAnchors() {
     if (anchoring || anchored) {
       return
@@ -295,26 +315,24 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     }
 
     Log.i(TAG, "Creating anchors")
-    for (stop in stops) {
-      stop.addAnchors(earth, HOVER_ABOVE_TERRAIN)
-    }
+    createAnchorsCore(earth)
 
     anchored = true
     anchoring = false
   }
 
-  private fun SampleRender.renderObject(locationModel: LocationModel, rotate: Boolean, bounce: Boolean) {
-    if (locationModel.anchor == null) {
+  private fun SampleRender.renderObject(renderModel: RenderModel, rotate: Boolean, bounce: Boolean) {
+    if (renderModel.anchor == null) {
       return
     }
 
-    if (locationModel.kind != ObjectKind.ARROW && locationModel.kind != ObjectKind.WATERING_CAN &&
-      locationModel.anchor?.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS)
+    if (renderModel.kind != ObjectKind.ARROW && renderModel.kind != ObjectKind.WATERING_CAN &&
+      renderModel.anchor?.terrainAnchorState != Anchor.TerrainAnchorState.SUCCESS)
     {
       return
     }
 
-    if (locationModel.anchor?.trackingState != TrackingState.TRACKING) {
+    if (renderModel.anchor?.trackingState != TrackingState.TRACKING) {
       return
     }
 
@@ -353,20 +371,20 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     val transformedModelMatrix = FloatArray(16)
     // Get the current pose of the Anchor in world space. The Anchor pose is updated
     // during calls to session.update() as ARCore refines its estimate of the world.
-    locationModel.anchor?.pose?.toMatrix(locationModel.modelMatrix, 0)
-    Matrix.multiplyMM(transformedModelMatrix, 0, locationModel.modelMatrix, 0, transformationMatrix, 0)
-    Matrix.multiplyMM(locationModel.modelViewMatrix, 0, viewMatrix, 0, transformedModelMatrix, 0)
-    Matrix.multiplyMM(locationModel.modelViewProjectionMatrix, 0, projectionMatrix, 0, locationModel.modelViewMatrix, 0)
+    renderModel.anchor?.pose?.toMatrix(renderModel.modelMatrix, 0)
+    Matrix.multiplyMM(transformedModelMatrix, 0, renderModel.modelMatrix, 0, transformationMatrix, 0)
+    Matrix.multiplyMM(renderModel.modelViewMatrix, 0, viewMatrix, 0, transformedModelMatrix, 0)
+    Matrix.multiplyMM(renderModel.modelViewProjectionMatrix, 0, projectionMatrix, 0, renderModel.modelViewMatrix, 0)
 
     // Update shader properties and draw
-    val virtualObjectShader = when (ObjectColor.getColor(locationModel.kind)) {
+    val virtualObjectShader = when (ObjectColor.getColor(renderModel.kind)) {
       ObjectColor.RED -> redObjectShader
       ObjectColor.GREEN -> greenObjectShader
       ObjectColor.BLUE -> blueObjectShader
     }
 
-    virtualObjectShader.setMat4("u_ModelViewProjection", locationModel.modelViewProjectionMatrix)
-    val virtualObjectMesh = when (ObjectShape.getShape(locationModel.kind)) {
+    virtualObjectShader.setMat4("u_ModelViewProjection", renderModel.modelViewProjectionMatrix)
+    val virtualObjectMesh = when (ObjectShape.getShape(renderModel.kind)) {
       ObjectShape.MAP_PIN -> mapPinMesh
       ObjectShape.DOWN_ARROW -> downArrowMesh
       ObjectShape.ARROW -> arrowMesh
@@ -423,7 +441,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       }
 
       val tap = activity.view.tapHelper.poll() ?: return
-      if (isMotionEventApproxHitLocation(stop.locationModel, tap)) {
+      if (isMotionEventApproxHitLocation(locationRenderModel, tap)) {
         stop.visited = true
         activity.unlockAchievement(activity.targetStopIndex)
         val nextStopString = activity.resources.getString(R.string.visited)
@@ -431,6 +449,8 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         val stopTitle = stop.getLocalizedTitle(activity.currentLanguage)
         activity.showMessage(nextStopString + stopNumberString + stopTitle)
         activity.targetStopIndex = activity.nextStopIndex()
+        anchored = false
+        createAnchors()
       }
     } else if (activity.appState == AppState.WATERING_MODE) {
       val cameraPose = earth.cameraGeospatialPose
@@ -461,8 +481,8 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
   // https://stackoverflow.com/questions/46728036/detecting-if-an-tap-event-with-arcore-hits-an-already-added-3d-object
   // https://github.com/hl3hl3/ARCoreMeasure/blob/master/app/src/main/java/com/hl3hl3/arcoremeasure/ArMeasureActivity.java
-  private fun isMotionEventApproxHitLocation(location: LocationModel, event: MotionEvent): Boolean {
-    Matrix.multiplyMV(vertexResult, 0, location.modelViewProjectionMatrix, 0, centerVertexOfCube, 0)
+  private fun isMotionEventApproxHitLocation(renderModel: RenderModel, event: MotionEvent): Boolean {
+    Matrix.multiplyMV(vertexResult, 0, renderModel.modelViewProjectionMatrix, 0, centerVertexOfCube, 0)
     /**
      * vertexResult = [x, y, z, w]
      *

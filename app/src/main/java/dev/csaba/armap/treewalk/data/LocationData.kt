@@ -1,7 +1,6 @@
 package dev.csaba.armap.treewalk.data
 
 import com.google.android.gms.maps.model.LatLng
-import com.google.ar.core.Earth
 
 data class LocationData(
     val gpsLocation: LatLng,
@@ -57,14 +56,6 @@ data class LocationData(
         result = 31 * result + seGeoFenceModel.hashCode()
         result = 31 * result + swGeoFenceModel.hashCode()
         return result
-    }
-
-    fun addAnchors(earth: Earth, hoverHeight: Double) {
-        locationModel.addAnchor(earth, hoverHeight)
-        nwGeoFenceModel.addAnchor(earth, hoverHeight)
-        neGeoFenceModel.addAnchor(earth, hoverHeight)
-        seGeoFenceModel.addAnchor(earth, hoverHeight)
-        swGeoFenceModel.addAnchor(earth, hoverHeight)
     }
 
     fun getLocalizedTitle(language: String): String {
