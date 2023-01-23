@@ -245,6 +245,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         stopKind,
         parts[7].trim(),
         parts[8].trim(),
+        parts[9].trim(),
         processLocalizedData(splitAndCleanse(it[1])),
         processLocalizedData(splitAndCleanse(it[2])),
         LocationModel(pinGps, stopKind),

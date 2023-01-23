@@ -9,6 +9,7 @@ data class LocationData(
     val kind: ObjectKind,
     val height: String,
     val width: String,
+    val scientificName: String,
     val englishData: LocalizedData,
     val spanishData: LocalizedData,
     val locationModel: LocationModel,
