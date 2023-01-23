@@ -414,12 +414,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       val tap = activity.view.tapHelper.poll() ?: return
       if (isMotionEventApproxHitLocation(locationRenderModel, tap)) {
         stop.visited = true
-        activity.unlockAchievement(activity.targetStopIndex)
-        val nextStopString = activity.resources.getString(R.string.visited)
-        val stopNumberString = " ${activity.targetStopNumber()}. "
-        val stopTitle = stop.getLocalizedTitle(activity.currentLanguage)
-        activity.showMessage(nextStopString + stopNumberString + stopTitle)
-        activity.targetStopIndex = activity.nextStopIndex()
+        activity.advanceStop(stop.getLocalizedTitle(activity.currentLanguage))
         anchored = false
         createAnchors()
       }

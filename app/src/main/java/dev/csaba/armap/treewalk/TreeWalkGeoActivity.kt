@@ -610,4 +610,12 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     mediaPlayer?.start()
   }
+
+  fun advanceStop(currentTitle: String) {
+    unlockAchievement(targetStopIndex)
+    val nextStopString = resources.getString(R.string.visited)
+    val stopNumberString = " ${targetStopNumber()}. "
+    showMessage(nextStopString + stopNumberString + currentTitle)
+    targetStopIndex = nextStopIndex()
+  }
 }
