@@ -192,6 +192,13 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
+    if (activity.appState == AppState.INVOKE_WATERING) {
+      // TODO: how concurrency safe is this? (To flip that latch)
+      activity.appState = AppState.WATERING_MODE
+      val blendedBitmap = getSemanticsBlendedFrame(frame) ?: return
+      activity.showWateringDialog(blendedBitmap)
+    }
+
     // Get projection matrix.
     camera.getProjectionMatrix(projectionMatrix, 0, Z_NEAR, Z_FAR)
 
@@ -399,12 +406,16 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
-    if (activity.appState == AppState.WATERING_IN_PROGRESS) {
+    if (activity.appState == AppState.WATERING_IN_PROGRESS ||
+      activity.appState == AppState.INVOKE_WATERING)
+    {
       // Silent return
       return
     }
 
-    if (activity.appState != AppState.TARGETING_STOP && activity.appState != AppState.WATERING_MODE) {
+    if (activity.appState != AppState.TARGETING_STOP &&
+      activity.appState != AppState.WATERING_MODE)
+    {
       activity.showResourceMessage(R.string.wrong_mode)
       return
     }
@@ -526,16 +537,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     }
   }
 
-  fun getSemanticsBlendedFrame(): Bitmap? {
-    val session = session ?: return null
-    val frame =
-      try {
-        session.update()
-      } catch (e: CameraNotAvailableException) {
-        Log.e(TAG, "Camera not available during getSemanticsBlendedFrame", e)
-        return null
-      }
-
+  private fun getSemanticsBlendedFrame(frame: Frame): Bitmap? {
     try {
       val semanticsPlane = frame.acquireSemanticImage().planes[0]
       val confidencePlane = frame.acquireSemanticConfidenceImage().planes[0]

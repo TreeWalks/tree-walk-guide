@@ -23,6 +23,7 @@ import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.location.Location
 import android.media.MediaPlayer
 import android.os.Bundle
@@ -200,14 +201,15 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         appState = AppState.LOOKING_FOR_CLOSEST_STOP
       }
 
-      if (!wateringInProgress && appState != AppState.WATERING_IN_PROGRESS) {
+      if (!wateringInProgress &&
+        appState != AppState.WATERING_IN_PROGRESS &&
+        appState != AppState.INVOKE_WATERING)
+      {
         when (appState) {
           AppState.WATERING_MODE -> {}
 
           AppState.TARGETING_STOP -> {
-            showResourceMessage(R.string.tree_watering)
-            showWateringDialog()
-            appState = AppState.WATERING_MODE
+            appState = AppState.INVOKE_WATERING
           }
 
           else -> showResourceMessage(R.string.wrong_mode)
@@ -687,7 +689,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     mediaPlayer = null
   }
 
-  private fun showWateringDialog() {
+  fun showWateringDialog(blendedBitmap: Bitmap) {
     val wateringDialog = AlertDialog.Builder(this).create()
     wateringDialog.setTitle(R.string.watering_trees)
     val dialogView: View =
@@ -706,11 +708,10 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       OnClickListener(function = positiveButtonClick)
     )
 
-    val imageView = findViewById<View>(R.id.blended_image_view) as ImageView
-    val bitmap = renderer.getSemanticsBlendedFrame() ?: return
-    imageView.setImageBitmap(bitmap)
+    val imageView = dialogView.findViewById(R.id.blended_image_view) as ImageView
+    imageView.setImageBitmap(blendedBitmap)
     imageView.setOnTouchListener { view, motionEvent ->
-      if (bitmap.getPixel(motionEvent.x.toInt(), motionEvent.y.toInt()) > 0) {
+      if (blendedBitmap.getPixel(motionEvent.x.toInt(), motionEvent.y.toInt()) > 0) {
         performWatering()
       }
 
@@ -718,6 +719,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
 
     wateringDialog.show()
+    appState = AppState.WATERING_MODE
+    showResourceMessage(R.string.tree_watering)
   }
 
   private fun playSound(ctx: Context?, resourceId: Int) {
