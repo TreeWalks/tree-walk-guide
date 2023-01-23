@@ -190,18 +190,24 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
     // Step 1.1.: Obtain Geospatial information and display it on the map.
     val earth = session.earth
-    if (earth?.trackingState == TrackingState.TRACKING && anchored) {
-      // Draw the placed anchors, if any exists and visible.
-      val nextStopIndex = activity.nextStopIndex()
-      for ((index, stop) in stops.withIndex()) {
-        // TODO: if current stop, if next stop (or if stop is close?)
-        val rotate = index == activity.targetStopIndex || index == nextStopIndex
-        val bounce = index == nextStopIndex
-        render.renderObject(stop.locationModel, rotate, bounce)
-        render.renderObject(stop.nwGeoFenceModel, rotate, bounce)
-        render.renderObject(stop.neGeoFenceModel, rotate, bounce)
-        render.renderObject(stop.seGeoFenceModel, rotate, bounce)
-        render.renderObject(stop.swGeoFenceModel, rotate, bounce)
+    if (earth?.trackingState == TrackingState.TRACKING) {
+      if (anchored) {
+        // Draw the placed anchors, if any exists and visible.
+        val nextStopIndex = activity.nextStopIndex()
+        for ((index, stop) in stops.withIndex()) {
+          // TODO: if current stop, if next stop (or if stop is close?)
+          val rotate = index == activity.targetStopIndex || index == nextStopIndex
+          val bounce = index == nextStopIndex
+          render.renderObject(stop.locationModel, rotate, bounce)
+          render.renderObject(stop.nwGeoFenceModel, rotate, bounce)
+          render.renderObject(stop.neGeoFenceModel, rotate, bounce)
+          render.renderObject(stop.seGeoFenceModel, rotate, bounce)
+          render.renderObject(stop.swGeoFenceModel, rotate, bounce)
+        }
+      } else {
+        if (scaffolded && !anchoring) {
+          activity.lifecycle.coroutineScope.launch { createAnchors() }
+        }
       }
     }
 
@@ -211,7 +217,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       wateringCanModel.anchor = null
       arrowModel.anchor?.detach()
       arrowModel.anchor = null
-      val cameraPose = camera.pose
+      // val cameraPose = camera.pose
       if (activity.appState == AppState.TARGETING_STOP) {
         // TODO: how to rotate the directional help arrow
         //  arrowModel.anchor = session.createAnchor(cameraPose)
@@ -219,8 +225,8 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         // Mostly SceneView unfortunately:
         // https://stackoverflow.com/a/59662629/292502
         // https://stackoverflow.com/a/55556746/292502
-        wateringCanModel.anchor = session.createAnchor(cameraPose.compose(Pose.makeTranslation(0f, -0.5f, -0.3f)))
-        render.renderObject(wateringCanModel, rotate=false, bounce=false)
+        // wateringCanModel.anchor = session.createAnchor(cameraPose.compose(Pose.makeTranslation(0f, -0.5f, -0.3f)))
+        // render.renderObject(wateringCanModel, rotate=false, bounce=false)
       }
     }
 
@@ -242,7 +248,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
-    zipMulti(locations, locationsEn, locationsEs) {
+    zipMulti(locations.take(3), locationsEn.take(3), locationsEs.take(3)) {
       val parts = splitAndCleanse(it[0])
       val pinGps = LatLng(parts[0].trim().toDouble(), parts[1].trim().toDouble())
       val stopKind = ObjectKind.getByName(parts[6].trim())
@@ -273,7 +279,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   }
 
   private fun createAnchors() {
-    if (anchoring) {
+    if (anchoring || anchored) {
       return
     }
 
@@ -286,6 +292,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
+    Log.i(TAG, "Creating anchors")
     for (stop in stops) {
       stop.addAnchors(earth, HOVER_ABOVE_TERRAIN)
     }
@@ -295,12 +302,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   }
 
   private fun SampleRender.renderObject(locationModel: LocationModel, rotate: Boolean, bounce: Boolean) {
-    if (!anchored) {
-      if (scaffolded && !anchoring) {
-        activity.lifecycle.coroutineScope.launch { createAnchors() }
-      }
-    }
-
     if (locationModel.anchor == null) {
       return
     }
