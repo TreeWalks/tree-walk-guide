@@ -18,13 +18,18 @@ package dev.csaba.armap.treewalk
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.content.Context
+import android.content.DialogInterface
+import android.content.DialogInterface.OnClickListener
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -116,7 +121,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     return (targetStopIndex + 1) % renderer.stops.size
   }
 
-  fun nextStopNumber(): Int {
+  private fun nextStopNumber(): Int {
     if (renderer.stops.isEmpty()) {
       return -1
     }
@@ -138,11 +143,13 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     val translateIcon = ImageView(this)
     val informationIcon = ImageView(this)
     val settingsIcon = ImageView(this)
+    val gameIcon = ImageView(this)
 
     waterDropIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_water_drop_24))
     translateIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_translate_24))
     informationIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_info_outline_24))
     settingsIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_settings_24))
+    gameIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_leaderboard_24))
 
     // Build the menu with default options: light theme, 90 degrees, 72dp radius.
     // Set default SubActionButtons
@@ -152,6 +159,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       .addSubActionView(fabSubBuilder.setContentView(translateIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(informationIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(settingsIcon).build(), 196, 196)
+      .addSubActionView(fabSubBuilder.setContentView(gameIcon).build(), 196, 196)
       .attachTo(rightLowerButton).build()
 
     translateIcon.setOnClickListener {
@@ -209,6 +217,28 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           else -> showResourceMessage(R.string.wrong_mode)
         }
       }
+    }
+
+    gameIcon.setOnClickListener {
+      val gameDialog = AlertDialog.Builder(this).create()
+      val dialogView: View =
+        LayoutInflater.from(this).inflate(R.layout.game_dialog, null)
+      gameDialog.setView(dialogView)
+      val positiveButtonClick = { dialog: DialogInterface, which: Int ->
+        gameDialog.dismiss()
+      }
+      gameDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", OnClickListener(function = positiveButtonClick))
+
+      val scoreText: TextView = dialogView.findViewById(R.id.scoreNumberText) as TextView
+      scoreText.text = score.toString()
+
+      val leaderboardButton: Button = dialogView.findViewById(R.id.leaderboardButton) as Button
+      leaderboardButton.setOnClickListener { showTopPlayers() }
+
+      val achievementsButton: Button = dialogView.findViewById(R.id.achievementsButton) as Button
+      achievementsButton.setOnClickListener { showAchievements() }
+
+      gameDialog.show()
     }
 
     // Listen menu open and close events to animate the button content view
@@ -467,14 +497,14 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     FullScreenHelper.setFullScreenOnWindowFocusChanged(this, hasFocus)
   }
 
-  fun showAchievements() {
-    achievementClient?.achievementsIntent?.addOnSuccessListener { intent ->
+  private fun showTopPlayers() {
+    leaderboardsClient?.allLeaderboardsIntent?.addOnSuccessListener {intent ->
       startActivityForResult(intent, 0)
     }
   }
 
-  fun showTopPlayers() {
-    leaderboardsClient?.allLeaderboardsIntent?.addOnSuccessListener {intent ->
+  private fun showAchievements() {
+    achievementClient?.achievementsIntent?.addOnSuccessListener { intent ->
       startActivityForResult(intent, 0)
     }
   }
@@ -580,5 +610,4 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     mediaPlayer?.start()
   }
-
 }

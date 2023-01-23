@@ -50,4 +50,10 @@
   <string name="target_stop">Número de parada objetivo</string>
   <string name="target_stop_desc">El número de paradas apuntadas actualmente</string>
   <string name="visited">¡Felicidades! Tu visitaste</string>
+  <string name="watering_can">Watering can</string>
+  <string name="watering_in_progress">Riego en progreso…</string>
+  <string name="game_info">Información del juego</string>
+  <string name="score">Puntaje:</string>
+  <string name="leaderboard">Posiciones…</string>
+  <string name="achievements">Logros…</string>
 </resources>
