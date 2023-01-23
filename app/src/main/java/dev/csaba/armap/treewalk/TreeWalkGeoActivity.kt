@@ -98,6 +98,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   var speak = false
   var wateringInProgress = false
   private var mediaPlayer: MediaPlayer? = null
+  private var fabMenuIcon: ImageView? = null
 
   fun targetStopNumber(): Int {
     return if (targetStopIndex >= 0) targetStopIndex + 1 else targetStopIndex
@@ -511,7 +512,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     submitScore()
   }
 
-  fun wateringBonus() {
+  private fun wateringBonus() {
     score += 10
   }
 
@@ -548,6 +549,9 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
 
     appState = AppState.WATERING_IN_PROGRESS
+    fabMenuIcon?.setImageDrawable(
+      ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_shower_24)
+    )
     playSound(this.baseContext, R.raw.watering)
   }
 
@@ -568,6 +572,9 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       wateringBonus()
       if (appState == AppState.WATERING_IN_PROGRESS) {
         appState = AppState.WATERING_MODE
+        fabMenuIcon?.setImageDrawable(
+          ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_add_24)
+        )
       }
     }
 
