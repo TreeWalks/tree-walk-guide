@@ -19,6 +19,7 @@ import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.content.Context
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -95,6 +96,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   var targetStopIndex = -1
   var appState: AppState = AppState.INITIALIZING
   var speak = false
+  var wateringInProgress = false
+  private var mediaPlayer: MediaPlayer? = null
 
   fun targetStopNumber(): Int {
     return if (targetStopIndex >= 0) targetStopIndex + 1 else targetStopIndex
@@ -186,18 +189,24 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         appState = AppState.LOOKING_FOR_CLOSEST_STOP
       }
 
-      if (appState == AppState.WATERING_TREES) {
-        val nextStopString = resources.getString(R.string.move_to_next_stop)
-        val nextNumberString = " ${nextStopNumber()}. "
-        val nextStopData = renderer.stops[nextStopIndex()]
-        val nextStopTitle = nextStopData.getLocalizedTitle(currentLanguage)
-        showMessage(nextStopString + nextNumberString + nextStopTitle)
-        appState = AppState.TARGETING_STOP
-      } else if (appState == AppState.TARGETING_STOP) {
-        showResourceMessage(R.string.tree_watering)
-        appState = AppState.WATERING_TREES
-      } else {
-        showResourceMessage(R.string.wrong_mode)
+      if (!wateringInProgress && appState != AppState.WATERING_IN_PROGRESS) {
+        when (appState) {
+          AppState.WATERING_MODE -> {
+            val nextStopString = resources.getString(R.string.move_to_next_stop)
+            val nextNumberString = " ${nextStopNumber()}. "
+            val nextStopData = renderer.stops[nextStopIndex()]
+            val nextStopTitle = nextStopData.getLocalizedTitle(currentLanguage)
+            showMessage(nextStopString + nextNumberString + nextStopTitle)
+            appState = AppState.TARGETING_STOP
+          }
+
+          AppState.TARGETING_STOP -> {
+            showResourceMessage(R.string.tree_watering)
+            appState = AppState.WATERING_MODE
+          }
+
+          else -> showResourceMessage(R.string.wrong_mode)
+        }
       }
     }
 
@@ -515,12 +524,12 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     textToSpeech?.speak(text,TextToSpeech.QUEUE_FLUSH, null, null)
   }
 
-  fun showError(errorMessage: String, allowSpeak: Boolean = true) {
-    view.snackbarHelper.showError(this, errorMessage)
-    if (speak && allowSpeak) {
-      speak(errorMessage)
-    }
-  }
+//  fun showError(errorMessage: String, allowSpeak: Boolean = true) {
+//    view.snackbarHelper.showError(this, errorMessage)
+//    if (speak && allowSpeak) {
+//      speak(errorMessage)
+//    }
+//  }
 
   fun showMessage(message: String, allowSpeak: Boolean = true) {
     view.snackbarHelper.showMessage(this, message)
@@ -532,4 +541,37 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   fun showResourceMessage(messageId: Int, allowSpeak: Boolean = true) {
     showMessage(resources.getString(messageId), allowSpeak)
   }
+
+  fun performWatering() {
+    if (appState == AppState.WATERING_IN_PROGRESS) {
+      return
+    }
+
+    appState = AppState.WATERING_IN_PROGRESS
+    playSound(this.baseContext, R.raw.watering)
+  }
+
+  private fun stopSound() {
+    mediaPlayer?.release()
+    mediaPlayer = null
+  }
+
+  private fun playSound(ctx: Context?, rid: Int) {
+    if (rid == 0) {
+      return
+    }
+
+    stopSound()
+    mediaPlayer = MediaPlayer.create(ctx, rid)
+    mediaPlayer?.setOnCompletionListener {
+      stopSound()
+      wateringBonus()
+      if (appState == AppState.WATERING_IN_PROGRESS) {
+        appState = AppState.WATERING_MODE
+      }
+    }
+
+    mediaPlayer?.start()
+  }
+
 }

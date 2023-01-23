@@ -61,8 +61,8 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   private val vertexResult = FloatArray(4)
 
   val stops: MutableList<LocationData> = emptyList<LocationData>().toMutableList()
-  private val arrowModel = LocationModel(LatLng(0.0, 0.0), ObjectKind.ARROW)
-  private val wateringCanModel = LocationModel(LatLng(0.0, 0.0), ObjectKind.WATERING_CAN)
+  // private val arrowModel = LocationModel(LatLng(0.0, 0.0), ObjectKind.ARROW)
+  // private val wateringCanModel = LocationModel(LatLng(0.0, 0.0), ObjectKind.WATERING_CAN)
   private var scaffolded = false  // The stops array were scaffolded, but no anchors yet
   private var anchoring = false  // Anchors are created into the scaffold
   private var anchored = false  // Anchors were created as well into the scaffold
@@ -212,7 +212,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     }
 
     /*
-    if (activity.appState == AppState.TARGETING_STOP || activity.appState == AppState.WATERING_TREES) {
+    if (activity.appState == AppState.TARGETING_STOP || activity.appState == AppState.WATERING_MODE || activity.appState == AppState.WATERING_IN_PROGRESS) {
       // Dispose previous anchor because they are not stationary
       wateringCanModel.anchor?.detach()
       wateringCanModel.anchor = null
@@ -222,7 +222,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       if (activity.appState == AppState.TARGETING_STOP) {
         // TODO: how to rotate the directional help arrow
         //  arrowModel.anchor = session.createAnchor(cameraPose)
-      } else if (activity.appState == AppState.WATERING_TREES) {
+      } else if (activity.appState == AppState.WATERING_MODE || activity.appState == AppState.WATERING_IN_PROGRESS) {
         // Mostly SceneView unfortunately:
         // https://stackoverflow.com/a/59662629/292502
         // https://stackoverflow.com/a/55556746/292502
@@ -382,19 +382,24 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
+    val earth = session?.earth ?: return
+    if (earth.trackingState != TrackingState.TRACKING) {
+      activity.showResourceMessage(R.string.try_again)
+      return
+    }
+
     if (activity.appState == AppState.INITIALIZING || !anchored) {
       activity.showResourceMessage(R.string.initializing)
       return
     }
 
-    if (activity.appState != AppState.TARGETING_STOP && activity.appState != AppState.WATERING_TREES) {
-      activity.showResourceMessage(R.string.wrong_mode)
+    if (activity.appState == AppState.WATERING_IN_PROGRESS) {
+      // Silent return
       return
     }
 
-    val earth = session?.earth ?: return
-    if (earth.trackingState != TrackingState.TRACKING) {
-      activity.showResourceMessage(R.string.try_again)
+    if (activity.appState != AppState.TARGETING_STOP && activity.appState != AppState.WATERING_MODE) {
+      activity.showResourceMessage(R.string.wrong_mode)
       return
     }
 
@@ -427,7 +432,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         activity.showMessage(nextStopString + stopNumberString + stopTitle)
         activity.targetStopIndex = activity.nextStopIndex()
       }
-    } else if (activity.appState == AppState.WATERING_TREES) {
+    } else if (activity.appState == AppState.WATERING_MODE) {
       val cameraPose = earth.cameraGeospatialPose
       val stop = stops[activity.targetStopIndex]
       if (!isGpsInGeoFence(cameraPose.latitude, cameraPose.longitude, stop)) {
@@ -438,7 +443,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       val tap = activity.view.tapHelper.poll() ?: return
       if (getTapSemantics(frame, tap) == SemanticsLabel.TREE &&
         getSemanticsConfidence(frame, tap) > SEMANTICS_CONFIDENCE_THRESHOLD) {
-        activity.wateringBonus()
+        activity.performWatering()
       } else {
         activity.showResourceMessage(R.string.click_a_tree)
       }
