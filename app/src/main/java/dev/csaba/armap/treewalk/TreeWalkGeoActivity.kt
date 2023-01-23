@@ -100,7 +100,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   private var score = 0L
   var targetStopIndex = -1
   var appState: AppState = AppState.INITIALIZING
-  var speak = false
+  var speakEnabled = false
   var wateringInProgress = false
   private var mediaPlayer: MediaPlayer? = null
   private var fabMenuIcon: ImageView? = null
@@ -555,16 +555,16 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     textToSpeech?.speak(text,TextToSpeech.QUEUE_FLUSH, null, null)
   }
 
-//  fun showError(errorMessage: String, allowSpeak: Boolean = true) {
-//    view.snackbarHelper.showError(this, errorMessage)
-//    if (speak && allowSpeak) {
-//      speak(errorMessage)
-//    }
-//  }
+  fun showError(errorMessage: String, allowSpeak: Boolean = true) {
+    view.snackbarHelper.showError(this, errorMessage)
+    if (speakEnabled && allowSpeak) {
+      speak(errorMessage)
+    }
+  }
 
   fun showMessage(message: String, allowSpeak: Boolean = true) {
     view.snackbarHelper.showMessage(this, message)
-    if (speak && allowSpeak) {
+    if (speakEnabled && allowSpeak) {
       speak(message)
     }
   }
