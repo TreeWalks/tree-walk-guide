@@ -27,7 +27,7 @@
         android:icon="@drawable/baseline_volume_up_24"/>
 
     <SwitchPreferenceCompat
-        app:key="test_mode"
+        app:key="local_test"
         app:title="@string/local_test"
         app:summary="@string/local_test_desc"
         android:icon="@drawable/baseline_developer_mode_24"/>

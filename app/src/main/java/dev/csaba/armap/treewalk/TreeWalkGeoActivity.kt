@@ -15,13 +15,15 @@
  */
 package dev.csaba.armap.treewalk
 
+import android.Manifest
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.content.Context
 import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
 import android.content.Intent
-import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.location.Location
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -35,6 +37,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.coroutineScope
@@ -45,6 +48,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.games.AchievementsClient
 import com.google.android.gms.games.LeaderboardsClient
 import com.google.android.gms.games.PlayGames
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
@@ -106,6 +111,9 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   var wateringInProgress = false
   private var mediaPlayer: MediaPlayer? = null
   private var fabMenuIcon: ImageView? = null
+  private var localTest = false
+  lateinit private var fusedLocationClient: FusedLocationProviderClient
+  var lastLocation: Location? = null
 
   fun targetStopNumber(): Int {
     return if (targetStopIndex >= 0) targetStopIndex + 1 else targetStopIndex
@@ -423,7 +431,38 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     initGoogleClientAndSignin()
 
-    lifecycle.coroutineScope.launch(Dispatchers.IO) { downloadAllDataAsync() }
+    fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+    val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+    localTest = sharedPref.getBoolean("local_test", false)
+    speakEnabled = sharedPref.getBoolean("speech_helper", false)
+    if (localTest) {
+      if (ActivityCompat.checkSelfPermission(
+          this,
+          Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+          this,
+          Manifest.permission.ACCESS_COARSE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED
+      ) {
+        // TODO: Consider calling
+        //    ActivityCompat#requestPermissions
+        // here to request the missing permissions, and then overriding
+        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+        //                                          int[] grantResults)
+        // to handle the case where the user grants the permission. See the documentation
+        // for ActivityCompat#requestPermissions for more details.
+      } else {
+        fusedLocationClient.lastLocation
+          .addOnSuccessListener { location: Location? ->
+            lastLocation = location
+            // Got last known location. In some rare situations this can be null.
+            lifecycle.coroutineScope.launch(Dispatchers.IO) { downloadAllDataAsync() }
+          }
+      }
+    } else {
+      lifecycle.coroutineScope.launch(Dispatchers.IO) { downloadAllDataAsync() }
+    }
   }
 
   override fun onPause() {
@@ -460,14 +499,17 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
       val deferredList = listOf(deferredLocation, deferredLocationEn, deferredLocationEs)
       deferredList.awaitAll().apply {
+        val tweak = (localTest && lastLocation != null)
         renderer.processLocations(
           deferredLocation.getCompleted(),
           deferredLocationEn.getCompleted(),
-          deferredLocationEs.getCompleted()
+          deferredLocationEs.getCompleted(),
+          tweak,
+          lastLocation,
         )
 
         if (appState == AppState.INITIALIZING) {
-          targetStopIndex = readCurrentStopFromPreferences(sharedPref)
+          targetStopIndex = readCurrentStopFromPreferences()
           appState = AppState.TARGETING_STOP
         }
       }

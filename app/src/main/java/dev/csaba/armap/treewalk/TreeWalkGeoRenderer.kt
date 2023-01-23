@@ -1,5 +1,6 @@
 package dev.csaba.armap.treewalk
 
+import android.location.Location
 import android.opengl.Matrix
 import android.util.Log
 import android.view.MotionEvent
@@ -39,6 +40,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
     private const val CUBE_HIT_AREA_RADIUS = 1.0
     private const val SEMANTICS_CONFIDENCE_THRESHOLD = 0.5
+
+    private const val TWEAK_GPS_DX = 0.00012  // ~1065 cm in Fresno
+    private const val TWEAK_GPS_DY = 0.000106  // ~1169 cm in Fresno
   }
 
   private lateinit var backgroundRenderer: BackgroundRenderer
@@ -223,20 +227,23 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     )
   }
 
-  fun processLocations(locations: List<String>, locationsEn: List<String>, locationsEs: List<String>) {
+  fun processLocations(locations: List<String>, locationsEn: List<String>, locationsEs: List<String>, tweak: Boolean, loc: Location?) {
     if (stops.isNotEmpty()) {
       return
     }
 
-    zipMulti(locations.take(3), locationsEn.take(3), locationsEs.take(3)) {
+    val takeCount = if (tweak) locations.size else min(3, locations.size)
+    var startLat = (loc?.latitude ?: 0.0) + TWEAK_GPS_DY / 10.0
+    val startLon = loc?.longitude ?: 0.0
+    zipMulti(locations.takeLast(takeCount), locationsEn.takeLast(takeCount), locationsEs.takeLast(takeCount)) {
       val parts = splitAndCleanse(it[0])
-      val pinGps = LatLng(parts[0].trim().toDouble(), parts[1].trim().toDouble())
+      val pinGps = if (tweak) LatLng(startLat, startLon) else LatLng(parts[0].trim().toDouble(), parts[1].trim().toDouble())
       val stopKind = ObjectKind.getByName(parts[6].trim())
-      val nwGeoLat = parts[2].trim().toDouble()
-      val nwGeoLon = parts[3].trim().toDouble()
+      val nwGeoLat = if (tweak) startLat + TWEAK_GPS_DY / 3.0 else parts[2].trim().toDouble()
+      val nwGeoLon = if (tweak) startLon - TWEAK_GPS_DX / 3.0 else parts[3].trim().toDouble()
       val nwGeoGps = LatLng(nwGeoLat, nwGeoLon)
-      val seGeoLat = parts[4].trim().toDouble()
-      val seGeoLon = parts[5].trim().toDouble()
+      val seGeoLat = if (tweak) startLat - TWEAK_GPS_DY / 3.0 else parts[4].trim().toDouble()
+      val seGeoLon = if (tweak) startLon + TWEAK_GPS_DX / 3.0 else parts[5].trim().toDouble()
       val seGeoGps = LatLng(seGeoLat, seGeoLon)
       stops.add(LocationData(
         pinGps,
@@ -254,6 +261,10 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         LocationModel(seGeoGps, ObjectKind.POST),
         LocationModel(LatLng(seGeoLat, nwGeoLon), ObjectKind.POST)
       ))
+
+      if (tweak) {
+        startLat += TWEAK_GPS_DY
+      }
     }
 
     scaffolded = true
