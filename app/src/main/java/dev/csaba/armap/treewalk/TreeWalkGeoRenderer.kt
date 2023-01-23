@@ -424,7 +424,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       }
 
       val tap = activity.view.tapHelper.poll() ?: return
-      if (isMotionEventApproxHitLocation(locationRenderModel, tap)) {
+      if (isMotionEventApproxHitLocation(locationRenderModel, tap) ||
+        stop.locationModel.distance < POST_PROXIMITY_THRESHOLD / 2)
+      {
         stop.visited = true
         activity.advanceStop(stop.getLocalizedTitle(activity.currentLanguage))
         anchored = false
