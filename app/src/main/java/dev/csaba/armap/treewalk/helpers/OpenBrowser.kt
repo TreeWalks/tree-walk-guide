@@ -8,6 +8,7 @@ import android.os.Bundle
 fun openBrowserWindow(url: String?, context: Context?) {
     val uris = Uri.parse(url)
     val intent = Intent(Intent.ACTION_VIEW, uris)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     val bundle = Bundle()
     bundle.putBoolean("new_window", true)
     intent.putExtras(bundle)
