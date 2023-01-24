@@ -8,6 +8,7 @@ import android.graphics.YuvImage
 import android.media.Image
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
+import io.github.crow_misia.libyuv.*
 
 // https://stackoverflow.com/questions/54017087/how-to-convert-yuv-420-888-image-to-bitmap
 fun imageToBitmap(image: Image): Bitmap? {

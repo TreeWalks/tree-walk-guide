@@ -55,4 +55,5 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
 
     implementation 'com.github.CsabaConsulting:CircularFloatingActionMenu:1.5.0'
+    implementation 'io.github.crow-misia.libyuv:libyuv-android:0.25.0'
 }
