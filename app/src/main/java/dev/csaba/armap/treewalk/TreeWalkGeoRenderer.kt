@@ -23,13 +23,15 @@ import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
 import dev.csaba.armap.treewalk.data.*
-import dev.csaba.armap.treewalk.helpers.imageToBitmap
+import dev.csaba.armap.treewalk.helpers.YuvToRgbConverter
 import dev.csaba.armap.treewalk.helpers.splitAndCleanse
 import dev.csaba.armap.treewalk.helpers.zipMulti
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.nio.ByteOrder
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sin
 
 class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   SampleRender.Renderer, DefaultLifecycleObserver {
@@ -539,18 +541,27 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
   private fun getSemanticsBlendedFrame(frame: Frame): Bitmap? {
     try {
-      val semanticsPlane = frame.acquireSemanticImage().planes[0]
+      val semanticsImage = frame.acquireSemanticImage()
+      val semanticsPlane = semanticsImage.planes[0]
+      Log.i(TAG, "semantics ${semanticsImage.width} x ${semanticsImage.height}")
+      val confidenceImage = frame.acquireSemanticConfidenceImage()
       val confidencePlane = frame.acquireSemanticConfidenceImage().planes[0]
+      Log.i(TAG, "confidence ${confidenceImage.width} x ${confidenceImage.height}")
 
       val cameraImage = frame.acquireCameraImage()
-      val cameraBitmap = imageToBitmap(cameraImage) ?: return null
+      Log.i(TAG, "camera ${cameraImage.width} x ${cameraImage.height}")
+      val cameraBitmap: Bitmap = Bitmap.createBitmap(cameraImage.width, cameraImage.height, Bitmap.Config.ARGB_8888)
+      YuvToRgbConverter(activity.baseContext).yuvToRgb(cameraImage, cameraBitmap)
+      // val cameraBitmap = imageToBitmap(cameraImage) ?: return null
 
-      val halfWidth = virtualSceneFramebuffer.width / 2
-      val halfHeight = virtualSceneFramebuffer.height / 2
-      val shrankBitmap = cameraBitmap.scale(halfWidth, halfHeight)
-      for (x in 0 until halfWidth step 1) {
-        for (y in 0 until halfHeight step 1) {
-          val byteIndex = 2 * (x * semanticsPlane.pixelStride + y * semanticsPlane.rowStride)
+      assert(semanticsImage.width == confidenceImage.width)
+      assert(semanticsImage.height == confidenceImage.height)
+      assert(cameraImage.width >= semanticsImage.width)
+      assert(cameraImage.height >= semanticsImage.height)
+      val shrankBitmap = cameraBitmap.scale(semanticsImage.width, semanticsImage.height)
+      for (x in 0 until semanticsImage.width step 1) {
+        for (y in 0 until semanticsImage.height step 1) {
+          val byteIndex = x * semanticsPlane.pixelStride + y * semanticsPlane.rowStride
           if (semanticsPlane.buffer.get(byteIndex).toInt() != SemanticsLabel.TREE.ordinal) {
             shrankBitmap[x, y] = 0
           } else {
