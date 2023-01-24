@@ -556,7 +556,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       Log.i(TAG, "camera ${cameraImage.width} x ${cameraImage.height}")
       val cameraBitmap: Bitmap = Bitmap.createBitmap(cameraImage.width, cameraImage.height, Bitmap.Config.ARGB_8888)
       YuvToRgbConverter(activity.baseContext).yuvToRgb(cameraImage, cameraBitmap)
-      // val cameraBitmap = imageToBitmap(cameraImage) ?: return null
 
       assert(semanticsImage.width == confidenceImage.width)
       assert(semanticsImage.height == confidenceImage.height)
