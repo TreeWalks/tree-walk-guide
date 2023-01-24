@@ -1,11 +1,17 @@
 package dev.csaba.armap.treewalk.helpers
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.Rect
 import android.graphics.YuvImage
 import android.media.Image
+import android.renderscript.Allocation
+import android.renderscript.Element
+import android.renderscript.RenderScript
+import android.renderscript.ScriptIntrinsicYuvToRGB
+import android.renderscript.Type
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import io.github.crow_misia.libyuv.*
@@ -37,9 +43,14 @@ fun imageToBitmap(image: Image): Bitmap? {
     return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 }
 
+// Also try https://github.com/android/camera-samples/blob/35396a9d2df42fa796db7592f333cd29c6358c4c/CameraXTfLite/utils/src/main/java/com/example/android/camera/utils/YuvToRgbConverter.kt
+
+
+
 /*
-https://blog.minhazav.dev/how-to-convert-yuv-420-sp-android.media.Image-to-Bitmap-or-jpeg/
-https://blog.minhazav.dev/how-to-use-renderscript-to-convert-YUV_420_888-yuv-image-to-bitmap/
+// https://blog.minhazav.dev/how-to-convert-yuv-420-sp-android.media.Image-to-Bitmap-or-jpeg/
+// https://blog.minhazav.dev/how-to-use-renderscript-to-convert-YUV_420_888-yuv-image-to-bitmap/
+// https://gist.github.com/mebjas/f639adec844f4046ffba0f9c4f614291
 fun yuv420ToBitmap(image: Image, context: Context?): Bitmap? {
     val rs = RenderScript.create(context)
     val script = ScriptIntrinsicYuvToRGB.create(
@@ -68,7 +79,7 @@ fun yuv420ToBitmap(image: Image, context: Context?): Bitmap? {
     script.setInput(`in`)
     script.forEach(out)
     val bitmap = Bitmap.createBitmap(
-        image.getWidth(), image.getHeight(), Config.ARGB_8888
+        image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888
     )
     out.copyTo(bitmap)
     return bitmap
