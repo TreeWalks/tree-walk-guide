@@ -66,4 +66,7 @@
   <string name="web_page">Página web</string>
   <string name="page">Página</string>
   <string name="screen_shot">Captura de pantalla</string>
+  <string name="ok">OK</string>
+  <string name="mark">Marcar</string>
+  <string name="close">Cerrar</string>
 </resources>

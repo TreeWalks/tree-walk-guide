@@ -263,16 +263,43 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       }
       infoDialog.setButton(
         DialogInterface.BUTTON_POSITIVE,
-        "OK",
+        resources.getString(R.string.ok),
         OnClickListener(function = positiveButtonClick)
       )
 
+      val neutralButtonClick = { _: DialogInterface, _: Int ->
+        stop.visited = true
+        advanceStop(stop.getLocalizedTitle(currentLanguage))
+        renderer.anchored = false
+        renderer.createAnchors()
+        infoDialog.dismiss()
+      }
+      val neutralButtonIcon = ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_done_24)
+      neutralButtonIcon?.setBounds(
+        0, 0,
+        neutralButtonIcon.bounds.width() / 2,
+        neutralButtonIcon.bounds.width() / 2,
+      )
+      infoDialog.setButton(
+        DialogInterface.BUTTON_NEUTRAL,
+        resources.getString(R.string.mark),
+        neutralButtonIcon,
+        OnClickListener(function = neutralButtonClick)
+      )
+
+      val negativeButtonIcon = ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_open_in_new_light_24)
+      negativeButtonIcon?.setBounds(
+        0, 0,
+        negativeButtonIcon.bounds.width() / 2,
+        negativeButtonIcon.bounds.width() / 2,
+      )
       val negativeButtonClick = { _: DialogInterface, _: Int ->
         openBrowserWindow(stop.getLocalizedUrl(currentLanguage), this.baseContext)
       }
       infoDialog.setButton(
         DialogInterface.BUTTON_NEGATIVE,
         resources.getString(R.string.page),
+        negativeButtonIcon,
         OnClickListener(function = negativeButtonClick)
       )
 

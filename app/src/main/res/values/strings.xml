@@ -51,4 +51,7 @@
   <string name="web_page">Web page</string>
   <string name="page">Page</string>
   <string name="screen_shot">Screen Shot</string>
+  <string name="ok">OK</string>
+  <string name="mark">Mark</string>
+  <string name="close">Close</string>
 </resources>
