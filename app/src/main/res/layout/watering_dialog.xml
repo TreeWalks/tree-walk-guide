@@ -7,7 +7,7 @@
     <ImageView android:id="@+id/blended_image_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="fitCenter"
+        android:scaleType="center"
         android:contentDescription="@string/screen_shot"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
