@@ -548,17 +548,17 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       val semanticsImage = frame.acquireSemanticImage()
       val semanticsPlane = semanticsImage.planes[0]
       Log.i(TAG, "semantics ${semanticsImage.width} x ${semanticsImage.height}")
-      val confidenceImage = frame.acquireSemanticConfidenceImage()
-      val confidencePlane = frame.acquireSemanticConfidenceImage().planes[0]
-      Log.i(TAG, "confidence ${confidenceImage.width} x ${confidenceImage.height}")
+      // val confidenceImage = frame.acquireSemanticConfidenceImage()
+      // val confidencePlane = confidenceImage.planes[0]
+      // Log.i(TAG, "confidence ${confidenceImage.width} x ${confidenceImage.height}")
 
       val cameraImage = frame.acquireCameraImage()
       Log.i(TAG, "camera ${cameraImage.width} x ${cameraImage.height}")
       val cameraBitmap: Bitmap = Bitmap.createBitmap(cameraImage.width, cameraImage.height, Bitmap.Config.ARGB_8888)
       YuvToRgbConverter(activity.baseContext).yuvToRgb(cameraImage, cameraBitmap)
 
-      assert(semanticsImage.width == confidenceImage.width)
-      assert(semanticsImage.height == confidenceImage.height)
+      // assert(semanticsImage.width == confidenceImage.width)
+      // assert(semanticsImage.height == confidenceImage.height)
       assert(cameraImage.width >= semanticsImage.width)
       assert(cameraImage.height >= semanticsImage.height)
       val shrankBitmap = cameraBitmap.scale(semanticsImage.width, semanticsImage.height)
@@ -567,12 +567,12 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
           val byteIndex = x * semanticsPlane.pixelStride + y * semanticsPlane.rowStride
           if (semanticsPlane.buffer.get(byteIndex).toInt() != SemanticsLabel.TREE.ordinal) {
             shrankBitmap[x, y] = 0
-          } else {
+          }/* else {
             val byteIndex2 = x * confidencePlane.pixelStride + y * confidencePlane.rowStride
             val conf = confidencePlane.buffer.order(ByteOrder.nativeOrder()).getFloat(byteIndex2)
             val colorOffset = ((1.0 - conf) * 128).toInt()
             shrankBitmap[x, y] = shrankBitmap[x, y] + colorOffset
-          }
+          }*/
         }
       }
 
