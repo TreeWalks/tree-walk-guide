@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
-import androidx.core.graphics.get
 import androidx.core.graphics.scale
 import androidx.core.graphics.set
 import androidx.lifecycle.DefaultLifecycleObserver
