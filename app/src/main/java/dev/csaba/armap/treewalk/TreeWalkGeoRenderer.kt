@@ -3,6 +3,8 @@ package dev.csaba.armap.treewalk
 import android.graphics.Bitmap
 import android.location.Location
 import android.opengl.Matrix
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
 import androidx.core.graphics.get
@@ -198,7 +200,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       // TODO: how concurrency safe is this? (To flip that latch)
       activity.appState = AppState.WATERING_MODE
       val blendedBitmap = getSemanticsBlendedFrame(frame) ?: return
-      activity.showWateringDialog(blendedBitmap)
+      Handler(Looper.getMainLooper()).post {
+        activity.showWateringDialog(blendedBitmap)
+      }
     }
 
     // Get projection matrix.
