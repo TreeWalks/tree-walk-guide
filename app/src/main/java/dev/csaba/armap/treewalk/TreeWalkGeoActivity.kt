@@ -69,6 +69,7 @@ import java.io.File
 import java.io.FileReader
 import java.util.*
 import kotlin.math.min
+import android.view.ViewGroup
 
 
 class TreeWalkGeoActivity : AppCompatActivity() {
@@ -737,6 +738,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     val imageView = dialogView.findViewById(R.id.blended_image_view) as ImageView
     imageView.setImageBitmap(blendedBitmap)
+    imageView.layoutParams = ViewGroup.LayoutParams(blendedBitmap.width, blendedBitmap.height)
     imageView.setOnTouchListener { view, motionEvent ->
       if (blendedBitmap.getPixel(motionEvent.x.toInt(), motionEvent.y.toInt()) > 0) {
         performWatering()
