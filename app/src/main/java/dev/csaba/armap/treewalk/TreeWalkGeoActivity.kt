@@ -731,7 +731,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
     wateringDialog.setButton(
       DialogInterface.BUTTON_POSITIVE,
-      "OK",
+      resources.getString(R.string.close),
       OnClickListener(function = positiveButtonClick)
     )
 
