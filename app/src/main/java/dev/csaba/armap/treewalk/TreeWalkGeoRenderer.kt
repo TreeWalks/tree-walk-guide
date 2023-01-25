@@ -43,11 +43,11 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     private const val Z_NEAR = 0.1f
     private const val Z_FAR = 1000f
 
-    private const val HOVER_ABOVE_TERRAIN = 0.5  // meters
+    private const val HOVER_ABOVE_TERRAIN = 0.0  // meters
     private const val POST_PROXIMITY_THRESHOLD = 0.003  // kilometers
 
     private const val CUBE_HIT_AREA_RADIUS = 1.0
-    private const val SEMANTICS_CONFIDENCE_THRESHOLD = 0.5
+    // private const val SEMANTICS_CONFIDENCE_THRESHOLD = 0.5
 
     private const val TWEAK_GPS_DX = 0.00012  // ~1065 cm in Fresno
     private const val TWEAK_GPS_DY = 0.000106  // ~1169 cm in Fresno
