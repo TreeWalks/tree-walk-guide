@@ -18,21 +18,26 @@ package dev.csaba.armap.treewalk
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.location.Location
+import android.media.Image
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -40,6 +45,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.get
+import androidx.core.graphics.set
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
@@ -52,6 +59,7 @@ import com.google.android.gms.games.PlayGames
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.ar.core.Config
+import com.google.ar.core.SemanticsLabel
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton
@@ -68,8 +76,8 @@ import okhttp3.OkHttpClient
 import java.io.File
 import java.io.FileReader
 import java.util.*
+import kotlin.math.floor
 import kotlin.math.min
-import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
 
 
 class TreeWalkGeoActivity : AppCompatActivity() {
@@ -80,6 +88,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     private const val LOCATIONS_ES_FILE_NAME = "locations_en.xml"
     const val WEBSITE_URL = "https://treewalks.github.io/"
     private const val DEFAULT_LANGUAGE = "en"
+    const val WATERING_BROADCAST_FILTER = "Watering_broadcast_receiver_intent_filter"
+    const val WATERING_BONUS = 50
   }
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
@@ -109,15 +119,23 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   private var score = 0L
   var targetStopIndex = -1
   var appState: AppState = AppState.INITIALIZING
-  var speakEnabled = false
-  var wateringInProgress = false
+  private var speakEnabled = false
   private var mediaPlayer: MediaPlayer? = null
   private var fabMenuIcon: ImageView? = null
   private var localTest = false
-  lateinit private var fusedLocationClient: FusedLocationProviderClient
-  var lastLocation: Location? = null
+  private lateinit var fusedLocationClient: FusedLocationProviderClient
+  private var lastLocation: Location? = null
+  var semanticsImage: Image? = null
+  var cameraImage: Image? = null
+  var developerMode = false
 
-  fun targetStopNumber(): Int {
+  private var broadcastReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+      showWateringDialog()
+    }
+  }
+
+  private fun targetStopNumber(): Int {
     return if (targetStopIndex >= 0) targetStopIndex + 1 else targetStopIndex
   }
 
@@ -137,29 +155,29 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     // Set up the white button on the lower right corner
     // more or less with default parameter
     val fabMenuIcon = ImageView(this)
-    fabMenuIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_add_24))
+    fabMenuIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_add_24))
     val rightLowerButton: FloatingActionButton = FloatingActionButton.Builder(this)
       .setContentView(fabMenuIcon)
       .build()
 
     val fabSubBuilder: SubActionButton.Builder = SubActionButton.Builder(this)
-    val waterDropIcon = ImageView(this)
+    val wateringIcon = ImageView(this)
     val translateIcon = ImageView(this)
     val informationIcon = ImageView(this)
     val settingsIcon = ImageView(this)
     val gameIcon = ImageView(this)
 
-    waterDropIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_shower_24))
-    translateIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_translate_24))
-    informationIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_info_outline_24))
-    settingsIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_settings_24))
-    gameIcon.setImageDrawable(ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_leaderboard_24))
+    wateringIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_shower_24))
+    translateIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_translate_24))
+    informationIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_info_outline_24))
+    settingsIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_settings_24))
+    gameIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_leaderboard_24))
 
     // Build the menu with default options: light theme, 90 degrees, 72dp radius.
     // Set default SubActionButtons
     val circularMenu: FloatingActionMenu = FloatingActionMenu.Builder(this)
       .setRadius(500)
-      .addSubActionView(fabSubBuilder.setContentView(waterDropIcon).build(), 196, 196)
+      .addSubActionView(fabSubBuilder.setContentView(wateringIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(translateIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(informationIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(settingsIcon).build(), 196, 196)
@@ -196,19 +214,17 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       startActivity(settingsIntent)
     }
 
-    waterDropIcon.setOnClickListener {
+    wateringIcon.setOnClickListener {
       if (targetStopIndex < 0) {
         showResourceMessage(R.string.missing_target)
         appState = AppState.LOOKING_FOR_CLOSEST_STOP
       }
 
-      if (!wateringInProgress &&
-        appState != AppState.WATERING_IN_PROGRESS &&
-        appState != AppState.INVOKE_WATERING)
+      if (appState != AppState.WATERING_IN_PROGRESS &&
+        appState != AppState.INVOKE_WATERING &&
+        appState != AppState.WATERING_FINISHED)
       {
         when (appState) {
-          AppState.WATERING_MODE -> {}
-
           AppState.TARGETING_STOP -> {
             appState = AppState.INVOKE_WATERING
           }
@@ -275,7 +291,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         renderer.createAnchors()
         infoDialog.dismiss()
       }
-      val neutralButtonIcon = ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_done_24)
+      val neutralButtonIcon = ContextCompat.getDrawable(baseContext, R.drawable.baseline_done_24)
       neutralButtonIcon?.setBounds(
         0, 0,
         neutralButtonIcon.bounds.width() / 2,
@@ -288,14 +304,14 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         OnClickListener(function = neutralButtonClick)
       )
 
-      val negativeButtonIcon = ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_open_in_new_light_24)
+      val negativeButtonIcon = ContextCompat.getDrawable(baseContext, R.drawable.baseline_open_in_new_light_24)
       negativeButtonIcon?.setBounds(
         0, 0,
         negativeButtonIcon.bounds.width() / 2,
         negativeButtonIcon.bounds.width() / 2,
       )
       val negativeButtonClick = { _: DialogInterface, _: Int ->
-        openBrowserWindow(stop.getLocalizedUrl(currentLanguage), this.baseContext)
+        openBrowserWindow(stop.getLocalizedUrl(currentLanguage), baseContext)
       }
       infoDialog.setButton(
         DialogInterface.BUTTON_NEGATIVE,
@@ -449,6 +465,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+    developerMode = Settings.Secure.getInt(
+      contentResolver,
+      Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0
+    ) > 0
+
     val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
     localTest = sharedPref.getBoolean("local_test", false)
     speakEnabled = sharedPref.getBoolean("speech_helper", false)
@@ -481,6 +502,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     }
   }
 
+  override fun onResume() {
+    super.onResume()
+    registerReceiver(broadcastReceiver, IntentFilter(WATERING_BROADCAST_FILTER))
+  }
+
   override fun onPause() {
     super.onPause()
     textToSpeech?.stop()
@@ -488,6 +514,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
   override fun onDestroy() {
     super.onDestroy()
+    unregisterReceiver(broadcastReceiver)
     textToSpeech?.shutdown()
     disposable.dispose()
   }
@@ -677,7 +704,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   }
 
   private fun wateringBonus() {
-    score += 50
+    score += WATERING_BONUS
+    val xpString = resources.getString(R.string.experience_points)
+    val xpNumberString = "$WATERING_BONUS "
+    showMessage(xpNumberString + xpString)
+    submitScore()
   }
 
   private fun submitScore() {
@@ -689,7 +720,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     textToSpeech?.speak(text,TextToSpeech.QUEUE_FLUSH, null, null)
   }
 
-  fun showMessage(message: String, allowSpeak: Boolean = true) {
+  private fun showMessage(message: String, allowSpeak: Boolean = true) {
     view.snackbarHelper.showMessage(this, message)
     if (speakEnabled && allowSpeak) {
       speak(message)
@@ -700,35 +731,84 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     showMessage(resources.getString(messageId), allowSpeak)
   }
 
-  private fun performWatering() {
-    if (appState == AppState.WATERING_IN_PROGRESS) {
+  private suspend fun processSemanticImage(
+    cameraBitmap: Bitmap,
+    blendedBitmap: Bitmap,
+    imageView: ImageView,
+    progressBar: ProgressBar,
+  ) = coroutineScope {
+    if (cameraImage != null && semanticsImage != null) {
+      val camImg = cameraImage!!
+      val semImg = semanticsImage!!
+      assert(camImg.width >= semImg.width)
+      assert(camImg.height >= semImg.height)
+      assert(camImg.width / camImg.height <= semImg.width / semImg.height)
+      // Example:
+      // AR framebuffer 1080 x 2287 (~16:7.5 ??? WTF)
+      // AR semantics 256 x 144 (16:9)
+      // AR camera 640 x 480 (4:3)
+      // semanticsScale = 480 / 144 = 3
+      // Transformed = 480 x 640
+      val heightScale: Double = camImg.height.toDouble() / semImg.height
+      val widthScale: Double = camImg.width.toDouble() / semImg.width
+      val semanticsPlane = semImg.planes[0]
+      val percentStride = blendedBitmap.width * blendedBitmap.height / 100
+      var pixelIndex = 0
+      var progress = 0
+      for (x in 0 until blendedBitmap.width step 1) {
+        for (y in 0 until blendedBitmap.height step 1) {
+          val mirroredX = blendedBitmap.width - x - 1
+          val byteIndex =
+            floor(y / widthScale) * semanticsPlane.pixelStride +
+            floor(mirroredX / heightScale) * semanticsPlane.rowStride
+          if (semanticsPlane.buffer.get(byteIndex.toInt()).toInt() != SemanticsLabel.TREE.ordinal) {
+            blendedBitmap[x, y] = greyScaleWithFade(cameraBitmap[y, mirroredX], 0.3)
+          } else {
+            blendedBitmap[x, y] = greenFade(cameraBitmap[y, mirroredX], 2)
+          }
+
+          pixelIndex += 1
+          if (pixelIndex % percentStride == 0) {
+            progress += 1
+            this@TreeWalkGeoActivity.runOnUiThread {
+              imageView.invalidate()
+            }
+          }
+        }
+      }
+
+      appState = AppState.WATERING_FINISHED
+      this@TreeWalkGeoActivity.runOnUiThread {
+        progressBar.visibility = View.GONE
+        wateringBonus()
+        stopSound()
+      }
+    }
+  }
+
+  fun showWateringDialog() {
+    if (cameraImage == null || semanticsImage == null) {
+      appState = AppState.TARGETING_STOP
       return
     }
 
-    appState = AppState.WATERING_IN_PROGRESS
-    fabMenuIcon?.setImageDrawable(
-      ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_shower_24)
-    )
-    playSound(this.baseContext, R.raw.watering)
-  }
+    val dialogBuilder = AlertDialog
+      .Builder(this)
+      .setTitle(R.string.watering_trees)
+      .setCancelable(false)
 
-  private fun stopSound() {
-    mediaPlayer?.release()
-    mediaPlayer = null
-  }
+    val wateringDialog = dialogBuilder.create()
 
-  fun showWateringDialog(blendedBitmap: Bitmap) {
-    val wateringDialog = AlertDialog.Builder(this).create()
-    wateringDialog.setTitle(R.string.watering_trees)
-    val dialogView: View =
-      LayoutInflater.from(this).inflate(R.layout.watering_dialog, null)
-    wateringDialog.setView(dialogView)
-
-    val positiveButtonClick = { _: DialogInterface, _: Int ->
-      fabMenuIcon?.setImageDrawable(
-        ContextCompat.getDrawable(this.baseContext, R.drawable.baseline_add_24)
-      )
-      wateringDialog.dismiss()
+    val positiveButtonClick = { dialog: DialogInterface, _: Int ->
+      if (appState == AppState.WATERING_FINISHED) {
+        fabMenuIcon?.setImageDrawable(
+          ContextCompat.getDrawable(baseContext, R.drawable.baseline_add_24)
+        )
+        appState = AppState.TARGETING_STOP
+        dialog.dismiss()
+      } else {
+        showResourceMessage(R.string.watering_in_progress)
+      }
     }
     wateringDialog.setButton(
       DialogInterface.BUTTON_POSITIVE,
@@ -736,21 +816,38 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       OnClickListener(function = positiveButtonClick)
     )
 
-    val imageView = dialogView.findViewById(R.id.blended_image_view) as ImageView
-    imageView.layoutParams = LayoutParams(blendedBitmap.width, blendedBitmap.height)
-    imageView.setImageBitmap(blendedBitmap)
-    // imageView.layoutParams = LayoutParams(blendedBitmap.width, blendedBitmap.height)
-    imageView.setOnTouchListener { view, motionEvent ->
-      if (blendedBitmap.getPixel(motionEvent.x.toInt(), motionEvent.y.toInt()) > 0) {
-        performWatering()
-      }
+    val dialogView: View =
+      LayoutInflater.from(this).inflate(R.layout.watering_dialog, null)
+    wateringDialog.setView(dialogView)
 
-      return@setOnTouchListener true
-    }
+    val semImg = semanticsImage!!
+    semanticsImage = semImg
+    val camImg = cameraImage!!
+    cameraImage = camImg
+    val cameraBitmap = Bitmap.createBitmap(camImg.width, camImg.height, Bitmap.Config.ARGB_8888)
+    YuvToRgbConverter(baseContext).yuvToRgb(camImg, cameraBitmap)
+
+    val imageView = dialogView.findViewById(R.id.blended_image_view) as ImageView
+    val blendedBitmap = Bitmap.createBitmap(camImg.height, camImg.width, cameraBitmap.config)
+    imageView.setImageBitmap(blendedBitmap)
+
+    val progressBar = dialogView.findViewById(R.id.progressbar) as ProgressBar
+
+    fabMenuIcon?.setImageDrawable(
+      ContextCompat.getDrawable(baseContext, R.drawable.baseline_shower_24)
+    )
+    playSound(baseContext, R.raw.watering)
 
     wateringDialog.show()
-    appState = AppState.WATERING_MODE
-    showResourceMessage(R.string.tree_watering)
+
+    lifecycle.coroutineScope.launch(Dispatchers.IO) {
+      processSemanticImage(cameraBitmap, blendedBitmap, imageView, progressBar)
+    }
+  }
+
+  private fun stopSound() {
+    mediaPlayer?.release()
+    mediaPlayer = null
   }
 
   private fun playSound(ctx: Context?, resourceId: Int) {
@@ -760,15 +857,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
     stopSound()
     mediaPlayer = MediaPlayer.create(ctx, resourceId)
-    mediaPlayer?.setOnCompletionListener {
-      stopSound()
-      wateringBonus()
-      if (appState == AppState.WATERING_IN_PROGRESS) {
-        appState = AppState.WATERING_MODE
-      }
-    }
-
     mediaPlayer?.start()
+    mediaPlayer?.isLooping = true
   }
 
   fun advanceStop(currentTitle: String) {

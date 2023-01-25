@@ -36,7 +36,7 @@
   <string name="target_stop_desc">The number of currently targeted stop</string>
   <string name="visited">Congratulations! You visited</string>
   <string name="watering_can">Watering can</string>
-  <string name="watering_trees">Watering trees!</string>
+  <string name="watering_trees">Watering trees…</string>
   <string name="watering_in_progress">Watering in progress…</string>
   <string name="game_info">Game information</string>
   <string name="score">Score</string>
@@ -54,4 +54,5 @@
   <string name="ok">OK</string>
   <string name="mark">Mark</string>
   <string name="close">Close</string>
+  <string name="experience_points">XP gained!</string>
 </resources>

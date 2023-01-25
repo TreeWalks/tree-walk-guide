@@ -1,21 +1,16 @@
 package dev.csaba.armap.treewalk
 
-import android.graphics.Bitmap
+import android.content.Intent
 import android.location.Location
 import android.opengl.Matrix
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
-import androidx.core.graphics.scale
-import androidx.core.graphics.set
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.CameraNotAvailableException
-import com.google.ar.core.exceptions.NotYetAvailableException
 import dev.csaba.armap.common.helpers.DisplayRotationHelper
 import dev.csaba.armap.common.helpers.TrackingStateHelper
 import dev.csaba.armap.common.samplerender.Framebuffer
@@ -24,15 +19,13 @@ import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.common.samplerender.Shader
 import dev.csaba.armap.common.samplerender.arcore.BackgroundRenderer
 import dev.csaba.armap.treewalk.data.*
-import dev.csaba.armap.treewalk.helpers.YuvToRgbConverter
-import dev.csaba.armap.treewalk.helpers.splitAndCleanse
-import dev.csaba.armap.treewalk.helpers.zipMulti
+import dev.csaba.armap.treewalk.helpers.*
 import kotlinx.coroutines.launch
 import java.io.IOException
-import java.nio.ByteOrder
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
+
 
 class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   SampleRender.Renderer, DefaultLifecycleObserver {
@@ -195,15 +188,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
-    if (activity.appState == AppState.INVOKE_WATERING) {
-      // TODO: how concurrency safe is this? (To flip that latch)
-      activity.appState = AppState.WATERING_MODE
-      val blendedBitmap = getSemanticsBlendedFrame(frame) ?: return
-      Handler(Looper.getMainLooper()).post {
-        activity.showWateringDialog(blendedBitmap)
-      }
-    }
-
     // Get projection matrix.
     camera.getProjectionMatrix(projectionMatrix, 0, Z_NEAR, Z_FAR)
 
@@ -217,6 +201,25 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     if (earth?.trackingState == TrackingState.TRACKING) {
       if (anchored && activity.targetStopIndex >= 0) {
         val stop = stops[activity.targetStopIndex]
+        if (activity.appState == AppState.INVOKE_WATERING) {
+          // TODO: how concurrency safe is this? (To flip that latch)
+          activity.appState = AppState.WATERING_IN_PROGRESS
+          val cameraPose = earth.cameraGeospatialPose
+          val withinFence = isGpsInGeoFence(cameraPose.latitude, cameraPose.latitude, stop)
+          if (!withinFence) {
+            activity.showResourceMessage(R.string.geofence_area)
+          }
+
+          if (withinFence || activity.developerMode) {
+            val (semanticsImage, cameraImage) = acquireImages(frame)
+            activity.semanticsImage = semanticsImage
+            activity.cameraImage = cameraImage
+            val treeDetectIntent = Intent(TreeWalkGeoActivity.WATERING_BROADCAST_FILTER)
+            treeDetectIntent.putExtra("tree_scan_start", true)
+            activity.baseContext.sendBroadcast(treeDetectIntent)
+          }
+        }
+
         // Draw the placed anchors, if any exists and visible.
         render.renderObject(locationRenderModel, !stop.visited, false)
         render.renderObject(nwGeoRenderModel, true, false)
@@ -318,7 +321,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
-    Log.i(TAG, "Creating anchors")
     createAnchorsCore(earth)
 
     anchored = true
@@ -402,30 +404,27 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
     val earth = session?.earth ?: return
     if (earth.trackingState != TrackingState.TRACKING) {
-      activity.showResourceMessage(R.string.try_again)
       return
     }
 
     if (activity.appState == AppState.INITIALIZING || !anchored) {
-      activity.showResourceMessage(R.string.initializing)
       return
     }
 
     if (activity.appState == AppState.WATERING_IN_PROGRESS ||
-      activity.appState == AppState.INVOKE_WATERING)
+      activity.appState == AppState.INVOKE_WATERING ||
+      activity.appState == AppState.WATERING_FINISHED)
     {
       // Silent return
       return
     }
 
-    if (activity.appState != AppState.TARGETING_STOP &&
-      activity.appState != AppState.WATERING_MODE)
-    {
-      activity.showResourceMessage(R.string.wrong_mode)
+    if (activity.appState != AppState.TARGETING_STOP) {
       return
     }
 
     if (activity.appState == AppState.TARGETING_STOP) {
+      val tap = activity.view.tapHelper.poll() ?: return
       if (activity.targetStopIndex < 0) {
         activity.showResourceMessage(R.string.missing_target)
         return
@@ -444,7 +443,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         return
       }
 
-      val tap = activity.view.tapHelper.poll() ?: return
       if (isMotionEventApproxHitLocation(locationRenderModel, tap) ||
         stop.locationModel.distance < POST_PROXIMITY_THRESHOLD / 2)
       {
@@ -454,24 +452,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         createAnchors()
       }
     }
-    /*
-    else if (activity.appState == AppState.WATERING_MODE) {
-      val cameraPose = earth.cameraGeospatialPose
-      val stop = stops[activity.targetStopIndex]
-      if (!isGpsInGeoFence(cameraPose.latitude, cameraPose.longitude, stop)) {
-        activity.showResourceMessage(R.string.geofence_area)
-        return
-      }
-
-      val tap = activity.view.tapHelper.poll() ?: return
-      if (getTapSemantics(frame, tap) == SemanticsLabel.TREE &&
-        getSemanticsConfidence(frame, tap) > SEMANTICS_CONFIDENCE_THRESHOLD) {
-        activity.performWatering()
-      } else {
-        activity.showResourceMessage(R.string.click_a_tree)
-      }
-    }
-   */
   }
 
   private fun isGpsInGeoFence(lat: Double, lon: Double, location: LocationData): Boolean {
@@ -513,71 +493,9 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
     return dx * dx + dy * dy < radius * radius
   }
 
-  private fun getTapSemantics(frame: Frame, event: MotionEvent): SemanticsLabel {
-    return try {
-      frame.acquireSemanticImage().use { semanticsImage ->
-        // The semantics image has a single plane, which stores labels for each pixel as 8-bit
-        // unsigned integers.
-        val plane = semanticsImage.planes[0]
-        val byteIndex = event.x.toInt() * plane.pixelStride + event.y.toInt() * plane.rowStride
-        SemanticsLabel.values()[plane.buffer.get(byteIndex).toInt()]
-      }
-    } catch (e: NotYetAvailableException) {
-      // Semantics data is not available yet.
-      SemanticsLabel.UNLABELED
-    }
-  }
-
-  private fun getSemanticsConfidence(frame: Frame, event: MotionEvent): Float {
-    return try {
-      frame.acquireSemanticConfidenceImage().use { confidenceImage ->
-        // The confidence image has a single plane, which stores labels for each pixel as 8-bit
-        // floating point numbers.
-        val plane = confidenceImage.planes[0]
-        val byteIndex = event.x.toInt() * plane.pixelStride + event.y.toInt() * plane.rowStride
-        plane.buffer.order(ByteOrder.nativeOrder()).getFloat(byteIndex)
-      }
-    } catch (e: NotYetAvailableException) {
-      0f
-    }
-  }
-
-  private fun getSemanticsBlendedFrame(frame: Frame): Bitmap? {
-    try {
-      val semanticsImage = frame.acquireSemanticImage()
-      val semanticsPlane = semanticsImage.planes[0]
-      Log.i(TAG, "semantics ${semanticsImage.width} x ${semanticsImage.height}")
-      // val confidenceImage = frame.acquireSemanticConfidenceImage()
-      // val confidencePlane = confidenceImage.planes[0]
-      // Log.i(TAG, "confidence ${confidenceImage.width} x ${confidenceImage.height}")
-
-      val cameraImage = frame.acquireCameraImage()
-      Log.i(TAG, "camera ${cameraImage.width} x ${cameraImage.height}")
-      val cameraBitmap: Bitmap = Bitmap.createBitmap(cameraImage.width, cameraImage.height, Bitmap.Config.ARGB_8888)
-      YuvToRgbConverter(activity.baseContext).yuvToRgb(cameraImage, cameraBitmap)
-
-      // assert(semanticsImage.width == confidenceImage.width)
-      // assert(semanticsImage.height == confidenceImage.height)
-      assert(cameraImage.width >= semanticsImage.width)
-      assert(cameraImage.height >= semanticsImage.height)
-      val shrankBitmap = cameraBitmap.scale(semanticsImage.width, semanticsImage.height)
-      for (x in 0 until semanticsImage.width step 1) {
-        for (y in 0 until semanticsImage.height step 1) {
-          val byteIndex = x * semanticsPlane.pixelStride + y * semanticsPlane.rowStride
-          if (semanticsPlane.buffer.get(byteIndex).toInt() != SemanticsLabel.TREE.ordinal) {
-            shrankBitmap[x, y] = 0
-          }/* else {
-            val byteIndex2 = x * confidencePlane.pixelStride + y * confidencePlane.rowStride
-            val conf = confidencePlane.buffer.order(ByteOrder.nativeOrder()).getFloat(byteIndex2)
-            val colorOffset = ((1.0 - conf) * 128).toInt()
-            shrankBitmap[x, y] = shrankBitmap[x, y] + colorOffset
-          }*/
-        }
-      }
-
-      return shrankBitmap
-    } catch (e: NotYetAvailableException) {
-      return null
-    }
+  private fun acquireImages(frame: Frame): Pair<android.media.Image, android.media.Image> {
+    val semanticsImage = frame.acquireSemanticImage()
+    val cameraImage = frame.acquireCameraImage()
+    return Pair(semanticsImage, cameraImage)
   }
 }

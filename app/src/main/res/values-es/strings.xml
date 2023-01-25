@@ -51,7 +51,7 @@
   <string name="target_stop_desc">El número de paradas apuntadas actualmente</string>
   <string name="visited">¡Felicidades! Tu visitaste</string>
   <string name="watering_can">Regadera</string>
-  <string name="watering_trees">¡Regando árboles!</string>
+  <string name="watering_trees">Regando árboles…</string>
   <string name="watering_in_progress">Riego en progreso…</string>
   <string name="game_info">Información del juego</string>
   <string name="score">Puntaje:</string>
@@ -69,4 +69,5 @@
   <string name="ok">OK</string>
   <string name="mark">Marcar</string>
   <string name="close">Cerrar</string>
+  <string name="experience_points">XP ganados!</string>
 </resources>
