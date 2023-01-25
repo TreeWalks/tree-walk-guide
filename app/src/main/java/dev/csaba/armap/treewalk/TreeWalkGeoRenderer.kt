@@ -51,8 +51,8 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   private var hasSetTextureNames = false
 
   // Virtual objects
-  private lateinit var mapPinMesh: Mesh
-  private lateinit var downArrowMesh: Mesh
+  private lateinit var pineMesh: Mesh
+  private lateinit var postMesh: Mesh
   private lateinit var redObjectShader: Shader
   private lateinit var greenObjectShader: Shader
   private lateinit var blueObjectShader: Shader
@@ -100,8 +100,8 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       virtualSceneFramebuffer = Framebuffer(render, 1, 1)
 
       // Virtual object to render (Geospatial Marker)
-      mapPinMesh = Mesh.createFromAsset(render, "models/map_pin.obj")
-      downArrowMesh = Mesh.createFromAsset(render, "models/down_arrow.obj")
+      pineMesh = Mesh.createFromAsset(render, "models/pine.obj")
+      postMesh = Mesh.createFromAsset(render, "models/post.obj")
       redObjectShader =
         Shader.createFromAssets(
           render,
@@ -389,8 +389,8 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
     virtualObjectShader.setMat4("u_ModelViewProjection", renderModel.modelViewProjectionMatrix)
     val virtualObjectMesh = when (ObjectShape.getShape(renderModel.kind)) {
-      ObjectShape.MAP_PIN -> mapPinMesh
-      ObjectShape.DOWN_ARROW -> downArrowMesh
+      ObjectShape.PINE -> pineMesh
+      ObjectShape.POST -> postMesh
     }
 
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)

@@ -1,15 +1,15 @@
 package dev.csaba.armap.treewalk.data
 
 enum class ObjectShape {
-    MAP_PIN,
-    DOWN_ARROW;
+    PINE,
+    POST;
 
     companion object {
         fun getShape(kind: ObjectKind) = when(kind) {
-            ObjectKind.GARDEN -> MAP_PIN
-            ObjectKind.TREE -> MAP_PIN
-            ObjectKind.TREES -> MAP_PIN
-            ObjectKind.POST -> DOWN_ARROW
+            ObjectKind.GARDEN -> PINE
+            ObjectKind.TREE -> PINE
+            ObjectKind.TREES -> PINE
+            ObjectKind.POST -> POST
         }
     }
 }
