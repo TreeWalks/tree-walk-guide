@@ -3,12 +3,12 @@
 Using Geospatial API provides an augmented reality immersive guide to explore the tree walk path.
 More development progression: https://devpost.com/software/tree-walk-guide#updates
 
-# Add your own locations to this application
+# Spin out your own version of to this application
 
-If you wouldn't want the burden to release your own augmented reality map app, then you can simply add your set of locations by submitting a pull request against the companion website. The mobile app will refresh its database from [the website's served data](https://recyclingtrashcans.github.io/locations_v2.xml). You need to modify only one file: [the areas.yml](https://github.com/RecyclingTrashCans/RecyclingTrashCans.github.io/tree/main/_data/areas.yml) the similar manner as the `park_ridge` area is defined.
-1. Decide a unique area name (consists of alphanumeric characters and underscore) for your locations.
-2. Mark it as `kind: extra`.
-3. Add the series of locations: by specifying title, latitude, longitude, marker type (currently it can be `trashcan` and `poi`), and an optional URL for each. The order doesn't matter in the yaml. The optional URL is a link which will be opened if the user clicks on the marker and then clicks on the Info Window again in the app.
+1. The walk metadata is stored in multiple files: a localization independent data set https://github.com/TreeWalks/tree-walk-guide/blob/main/app/src/main/res/values/locations.xml and localization dependent data set in each supported locales, in the exact same order as the `locations.xml`, right now [location_en.xml](https://github.com/TreeWalks/tree-walk-guide/blob/main/app/src/main/res/values/locations_en.xml) and [locations_es.xml](https://github.com/TreeWalks/tree-walk-guide/blob/main/app/src/main/res/values/locations_es.xml).
+2. The mobile app has its own localized resources related to mobile specific UX, that follows the standard Android localization practices: default English language strings are extracted to [values/strings.xml](https://github.com/TreeWalks/tree-walk-guide/blob/main/app/src/main/res/values/strings.xml) and the corresponding Spanish ones in [values-es/strings.xml](https://github.com/TreeWalks/tree-walk-guide/blob/main/app/src/main/res/values-es/strings.xml).
+3. You possibly first want to [modify the companion website](https://github.com/TreeWalks/TreeWalks.github.io) because the mobile app updates its dataset (the XML files) from fresh ones fromt he website. If you decide to go without a companion website then you can disable that mechanism by short circuiting [TreeWalkGeoActivity.downloadAllDataAsync](https://github.com/TreeWalks/tree-walk-guide/blob/17b3f373b5f0eb5b681a81459ee301492a37ffc3/app/src/main/java/dev/csaba/armap/treewalk/TreeWalkGeoActivity.kt#L533).
+4. Any metadata change you employ needs to be done in concert with the companion website.
 
 # Related ARCore Geospatial API hackathon
 
