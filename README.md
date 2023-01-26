@@ -1,4 +1,4 @@
-# Recycling Trashcan locations
+# Tree Walk Guide
 
 Using Geospatial API provides an augmented reality immersive guide to explore the tree walk path.
 More development progression: https://devpost.com/software/tree-walk-guide#updates
