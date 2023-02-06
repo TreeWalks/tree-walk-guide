@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string-array name="locations">
-    <item>36.813088|-119.748385|36.813211|-119.748566|36.812939|-119.748217|garden|||</item>
-    <item>36.81323|-119.74726|36.813665|-119.747167|36.812949|-119.746979|tree|100||Washingtonia robusta</item>
-    <item>36.81372|-119.74651|36.81379|-119.746726|36.813643|-119.746318|garden|||</item>
-    <item>36.81347|-119.74623|36.813496|-119.746505|36.813242|-119.745969|trees|70|20|Casuarina equisetifolia</item>
-    <item>36.812832|-119.74613|36.812908|-119.7463|36.812764|-119.74598|trees|15-30||Ficus carica</item>
-    <item>36.813504|-119.744932|36.813632|-119.745055|36.813349|-119.744753|tree|30-80|25-40|Pinus eldarica</item>
-    <item>36.81339|-119.74444|36.813408|-119.744726|36.813187|-119.744325|trees|60-80|25|Pinus canariensis</item>
-    <item>36.813271|-119.743959|36.813308|-119.744106|36.813096|-119.743898|tree|40|25|Eucalyptus nicholii</item>
-    <item>36.81257|-119.74257|36.812731|-119.742815|36.812425|-119.742625|tree|40|30|Pyrus calleryana</item>
-    <item>36.812321|-119.742693|36.812375|-119.742862|36.812103|-119.742616|tree|70-100|70|Quercus suber</item>
-    <item>36.810519|-119.742578|36.810725|-119.743073|36.810357|-119.742353|garden|||</item>
-    <item>36.811554|-119.746138|36.811865|-119.746102|36.811551|-119.74585|tree|20||Butia capitata</item>
-    <item>36.811013|-119.746041|36.811252|-119.745958|36.810854|-119.745722|tree|8-25||Vitex agnus-castus</item>
-    <item>36.810482|-119.746007|36.810528|-119.746188|36.810187|-119.74565|garden|||</item>
-    <item>36.81168|-119.748226|36.811695|-119.748805|36.811666|-119.748087|trees|60|8|Cupressus sempervirens \'Stricta\'</item>
-    <item>36.812023|-119.747888|36.812232|-119.748021|36.811928|-119.747635|tree|100||Calocedrus decurrens</item>
-    <item>36.812602|-119.749761|36.812816|-119.750194|36.812461|-119.749436|garden|||</item>
-    <item>36.812161|-119.750574|36.812183|-119.750764|36.811652|-119.750448|tree|300|100|Sequoiadendron giganteum</item>
-    <item>36.812234|-119.750993|36.812722|-119.751115|36.812223|-119.750952|trees|20|20|Chamaerops humilis</item>
-    <item>36.813535|-119.750799|36.813856|-119.750857|36.813514|-119.750675|trees|30|30|Olea europaea</item>
-    <item>36.814492|-119.750421|36.814677|-119.750455|36.814276|-119.750222|trees|30-80|30|Quercus kelloggii</item>
-    <item>36.814224|-119.750265|36.814252|-119.750302|36.8142|-119.749167|tree|20|20|Cercis occidentalis</item>
-    <item>36.814215|-119.750265|36.814352|-119.749121|36.814127|-119.748727|tree|30-60|20-30|Pinus halepensis</item>
-    <item>36.813851|-119.748992|36.81397|-119.74914|36.813593|-119.74875|tree|50-90|40|Alnus rhombifolia</item>
+    <item>36.813088|-119.748385|36.813211|-119.748566|36.812939|-119.748217|garden||||||||||</item>
+    <item>36.81323|-119.74726|36.813665|-119.747167|36.812949|-119.746979|tree|100||Washingtonia robusta|angiosperm|true||false|true|true|false</item>
+    <item>36.81372|-119.74651|36.81379|-119.746726|36.813643|-119.746318|garden||||||||||</item>
+    <item>36.81347|-119.74623|36.813496|-119.746505|36.813242|-119.745969|trees|70|20|Casuarina equisetifolia|angiosperm|true||true||true|false</item>
+    <item>36.812832|-119.74613|36.812908|-119.7463|36.812764|-119.74598|trees|15-30||Ficus carica|angiosperm|false|true|false|false|true|false</item>
+    <item>36.813504|-119.744932|36.813632|-119.745055|36.813349|-119.744753|tree|30-80|25-40|Pinus eldarica|gymnosperm|true|true|true||true|false</item>
+    <item>36.81339|-119.74444|36.813408|-119.744726|36.813187|-119.744325|trees|60-80|25|Pinus canariensis|gymnosperm|true|true|true||true|false</item>
+    <item>36.813271|-119.743959|36.813308|-119.744106|36.813096|-119.743898|tree|40|25|Eucalyptus nicholii|angiosperm|true||true||true|false</item>
+    <item>36.81257|-119.74257|36.812731|-119.742815|36.812425|-119.742625|tree|40|30|Pyrus calleryana|angiosperm|false|||false|true|false</item>
+    <item>36.812321|-119.742693|36.812375|-119.742862|36.812103|-119.742616|tree|70-100|70|Quercus suber|angiosperm|true||true|true|true|false</item>
+    <item>36.810519|-119.742578|36.810725|-119.743073|36.810357|-119.742353|garden||||||||||</item>
+    <item>36.811554|-119.746138|36.811865|-119.746102|36.811551|-119.74585|tree|20||Butia capitata|angiosperm|true||true||true|false</item>
+    <item>36.811013|-119.746041|36.811252|-119.745958|36.810854|-119.745722|tree|8-25||Vitex agnus-castus|angiosperm|false|||false|true|false</item>
+    <item>36.810482|-119.746007|36.810528|-119.746188|36.810187|-119.74565|garden||||||||||</item>
+    <item>36.81168|-119.748226|36.811695|-119.748805|36.811666|-119.748087|trees|60|8|Cupressus sempervirens \'Stricta\'|gymnosperm|true|true|true|true|true|false</item>
+    <item>36.812023|-119.747888|36.812232|-119.748021|36.811928|-119.747635|tree|100||Calocedrus decurrens|gymnosperm|true|true|true|true|true|true</item>
+    <item>36.812602|-119.749761|36.812816|-119.750194|36.812461|-119.749436|garden||||||||||</item>
+    <item>36.812161|-119.750574|36.812183|-119.750764|36.811652|-119.750448|tree|300|100|Sequoiadendron giganteum|gymnosperm|true|true|true|||true</item>
+    <item>36.812234|-119.750993|36.812722|-119.751115|36.812223|-119.750952|trees|20|20|Chamaerops humilis|angiosperm|true|false|true||true|false</item>
+    <item>36.813535|-119.750799|36.813856|-119.750857|36.813514|-119.750675|trees|30|30|Olea europaea|angiosperm|true|false|true||true|false</item>
+    <item>36.814492|-119.750421|36.814677|-119.750455|36.814276|-119.750222|trees|30-80|30|Quercus kelloggii|angiosperm|false|||false||true</item>
+    <item>36.814224|-119.750265|36.814252|-119.750302|36.8142|-119.749167|tree|20|20|Cercis occidentalis|angiosperm|false|||false|true|true</item>
+    <item>36.814215|-119.750265|36.814352|-119.749121|36.814127|-119.748727|tree|30-60|20-30|Pinus halepensis|gymnosperm|true|true|true||true|false</item>
+    <item>36.813851|-119.748992|36.81397|-119.74914|36.813593|-119.74875|tree|50-90|40|Alnus rhombifolia|angiosperm|false|true||false||true</item>
   </string-array>
 </resources>
