@@ -5,6 +5,8 @@ data class LocalizedData(
     val description: String,
     val content: String,
     val url: String,
+    val funFact: String,
+    val native: String,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -16,6 +18,8 @@ data class LocalizedData(
         if (description != other.description) return false
         if (content != other.content) return false
         if (url != other.url) return false
+        if (funFact != other.funFact) return false
+        if (native != other.native) return false
 
         return true
     }
@@ -25,6 +29,8 @@ data class LocalizedData(
         result = 31 * result + description.hashCode()
         result = 31 * result + content.hashCode()
         result = 31 * result + url.hashCode()
+        result = 31 * result + funFact.hashCode()
+        result = 31 * result + native.hashCode()
         return result
     }
 }

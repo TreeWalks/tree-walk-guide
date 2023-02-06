@@ -17,7 +17,14 @@ data class LocationData(
     val neGeoFenceModel: LocationModel,
     val seGeoFenceModel: LocationModel,
     val swGeoFenceModel: LocationModel,
-    var visited: Boolean = false
+    var phylum: String,
+    var evergreen: Boolean = false,
+    var climateAction: Boolean = false,
+    var pollution: Boolean = false,
+    var traffic: Boolean = false,
+    var droughtTolerant: Boolean = false,
+    var californiaNative: Boolean = false,
+    var visited: Boolean = false,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -38,6 +45,13 @@ data class LocationData(
         if (neGeoFenceModel != other.neGeoFenceModel) return false
         if (seGeoFenceModel != other.seGeoFenceModel) return false
         if (swGeoFenceModel != other.swGeoFenceModel) return false
+        if (phylum != other.phylum) return false
+        if (evergreen != other.evergreen) return false
+        if (climateAction != other.climateAction) return false
+        if (pollution != other.pollution) return false
+        if (traffic != other.traffic) return false
+        if (droughtTolerant != other.droughtTolerant) return false
+        if (californiaNative != other.californiaNative) return false
 
         return true
     }
@@ -56,6 +70,13 @@ data class LocationData(
         result = 31 * result + neGeoFenceModel.hashCode()
         result = 31 * result + seGeoFenceModel.hashCode()
         result = 31 * result + swGeoFenceModel.hashCode()
+        result = 31 * result + phylum.hashCode()
+        result = 31 * result + evergreen.hashCode()
+        result = 31 * result + climateAction.hashCode()
+        result = 31 * result + pollution.hashCode()
+        result = 31 * result + traffic.hashCode()
+        result = 31 * result + droughtTolerant.hashCode()
+        result = 31 * result + californiaNative.hashCode()
         return result
     }
 
@@ -77,6 +98,13 @@ data class LocationData(
         return when (language) {
             "es" -> spanishData.url
             else -> englishData.url
+        }
+    }
+
+    fun getLocalizedFunFact(language: String): String {
+        return when (language) {
+            "es" -> spanishData.funFact
+            else -> englishData.funFact
         }
     }
 }
