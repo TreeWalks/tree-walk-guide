@@ -375,19 +375,24 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   }
 
   private fun initGoogleClientAndSignin() {
-    googleSignInClient = GoogleSignIn.getClient(this,
-      GoogleSignInOptions.Builder(
-        GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN).build())
+    try {
+      googleSignInClient = GoogleSignIn.getClient(this,
+        GoogleSignInOptions.Builder(
+          GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN).build())
 
-    googleSignInClient?.silentSignIn()?.addOnCompleteListener {
-      if (it.isSuccessful) {
-        achievementClient = PlayGames.getAchievementsClient(this)
-        leaderboardsClient = PlayGames.getLeaderboardsClient(this)
-      } else {
-        Log.e(TAG, "signInError", it.exception)
+      googleSignInClient?.silentSignIn()?.addOnCompleteListener {
+        if (it.isSuccessful) {
+          achievementClient = PlayGames.getAchievementsClient(this)
+          leaderboardsClient = PlayGames.getLeaderboardsClient(this)
+        } else {
+          Log.e(TAG, "signInError", it.exception)
+        }
+      }?.addOnFailureListener {
+        Log.e(TAG, "signInFailure", it)
       }
-    }?.addOnFailureListener {
-      Log.e(TAG, "signInFailure", it)
+    }
+    catch (e: Exception) {
+      Log.e(TAG, "Google SignIn pacman handler", e)
     }
   }
 
