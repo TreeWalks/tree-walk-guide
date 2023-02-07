@@ -90,6 +90,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     private const val DEFAULT_LANGUAGE = "en"
     const val WATERING_BROADCAST_FILTER = "Watering_broadcast_receiver_intent_filter"
     const val WATERING_BONUS = 50
+    const val RC_APPLY_SETTINGS = 9001
   }
 
   lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
@@ -219,7 +220,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     settingsIcon.setOnClickListener {
       // Intent to open settings activity.
       val settingsIntent = Intent(this, SettingsActivity::class.java)
-      startActivity(settingsIntent)
+      startActivityForResult(settingsIntent, RC_APPLY_SETTINGS)
     }
 
     wateringIcon.setOnClickListener {
@@ -532,6 +533,20 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     unregisterReceiver(broadcastReceiver)
     textToSpeech?.shutdown()
     disposable.dispose()
+  }
+
+  @Deprecated("Deprecated in Java")
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
+
+    if (requestCode == RC_APPLY_SETTINGS) {
+      val currentStop = readCurrentStopFromPreferences()
+      if (currentStop != targetStopIndex) {
+        targetStopIndex = currentStop
+        renderer.anchored = false
+        renderer.createAnchors()
+      }
+    }
   }
 
   private fun readCurrentStopFromPreferences(): Int {
