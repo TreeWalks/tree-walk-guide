@@ -215,7 +215,6 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
             activity.semanticsImage = semanticsImage
             activity.cameraImage = cameraImage
             val treeDetectIntent = Intent(TreeWalkGeoActivity.WATERING_BROADCAST_FILTER)
-            treeDetectIntent.putExtra("tree_scan_start", true)
             activity.baseContext.sendBroadcast(treeDetectIntent)
           }
         }
@@ -409,6 +408,10 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
 
   // Handle only one tap per frame, as taps are usually low frequency compared to frame rate.
   private fun handleTap(frame: Frame, camera: Camera) {
+    if (!activity.captureTaps) {
+      return
+    }
+
     if (camera.trackingState != TrackingState.TRACKING) {
       return
     }

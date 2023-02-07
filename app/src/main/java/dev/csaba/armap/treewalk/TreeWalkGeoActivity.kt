@@ -124,6 +124,12 @@ class TreeWalkGeoActivity : AppCompatActivity() {
   var semanticsImage: Image? = null
   var cameraImage: Image? = null
   var developerMode = false
+  private var dialogOpen = false
+  private var menuOpen = false
+  val captureTaps: Boolean
+    get() {
+      return !dialogOpen && !menuOpen
+    }
 
   private var broadcastReceiver: BroadcastReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -206,9 +212,14 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           val localeList = LocaleListCompat.forLanguageTags(selectedLocale)
           AppCompatDelegate.setApplicationLocales(localeList)
         }
+        dialogOpen = false
       }
 
-      builder.setNegativeButton(resources.getString(R.string.cancel_action), null)
+      builder.setNegativeButton(resources.getString(R.string.cancel_action)) { _, _ ->
+        dialogOpen = false
+      }
+
+      dialogOpen = true
       builder.show()
     }
 
@@ -245,6 +256,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       gameDialog.setView(dialogView)
       val positiveButtonClick = { _: DialogInterface, _: Int ->
         gameDialog.dismiss()
+        dialogOpen = false
       }
       gameDialog.setButton(
         DialogInterface.BUTTON_POSITIVE,
@@ -261,6 +273,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       val achievementsButton: Button = dialogView.findViewById(R.id.achievementsButton) as Button
       achievementsButton.setOnClickListener { showAchievements() }
 
+      dialogOpen = true
       gameDialog.show()
     }
 
@@ -280,6 +293,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       val stop = renderer.stops[targetStopIndex]
 
       val positiveButtonClick = { _: DialogInterface, _: Int ->
+        dialogOpen = false
         infoDialog.dismiss()
       }
       infoDialog.setButton(
@@ -293,6 +307,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         advanceStop(stop.getLocalizedTitle(currentLanguage))
         renderer.anchored = false
         renderer.createAnchors()
+        dialogOpen = false
         infoDialog.dismiss()
       }
       val neutralButtonIcon = ContextCompat.getDrawable(baseContext, R.drawable.baseline_done_24)
@@ -420,12 +435,14 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         openBrowserWindow(stop.getLocalizedUrl(currentLanguage), baseContext)
       }
 
+      dialogOpen = true
       infoDialog.show()
     }
 
     // Listen menu open and close events to animate the button content view
     circularMenu.setStateChangeListener(object : FloatingActionMenu.MenuStateChangeListener {
       override fun onMenuOpened(menu: FloatingActionMenu?) {
+        menuOpen = true
         // Rotate the icon of rightLowerButton 45 degrees clockwise
         fabMenuIcon.rotation = 0f
         val pvhR = PropertyValuesHolder.ofFloat(View.ROTATION, 45f)
@@ -439,11 +456,12 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         val pvhR = PropertyValuesHolder.ofFloat(View.ROTATION, 0f)
         val animation = ObjectAnimator.ofPropertyValuesHolder(fabMenuIcon, pvhR)
         animation.start()
+        menuOpen = false
       }
     })
   }
 
-  private fun initGoogleClientAndSignin() {
+  private fun initGoogleClientAndSignIn() {
     try {
       googleSignInClient = GoogleSignIn.getClient(this,
         GoogleSignInOptions.Builder(
@@ -535,7 +553,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     // Create circular FAB menu
     createCircularFABMenu()
 
-    initGoogleClientAndSignin()
+    initGoogleClientAndSignIn()
 
     fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -611,9 +629,9 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
   private fun readCurrentStopFromPreferences(): Int {
     val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-    val unsanitizedTargetStop = sharedPref.getInt("current_stop", 1)
+    val unSanitizedTargetStop = sharedPref.getInt("current_stop", 1)
     val sanitizedTargetStop =
-      min(unsanitizedTargetStop, renderer.stops.size - 1).coerceAtLeast(1)
+      min(unSanitizedTargetStop, renderer.stops.size - 1).coerceAtLeast(1)
     return sanitizedTargetStop - 1
   }
 
@@ -895,6 +913,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           ContextCompat.getDrawable(baseContext, R.drawable.baseline_add_24)
         )
         appState = AppState.TARGETING_STOP
+        dialogOpen = false
         dialog.dismiss()
       } else {
         showResourceMessage(R.string.watering_in_progress)
@@ -928,6 +947,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     )
     playSound(baseContext, R.raw.watering)
 
+    dialogOpen = true
     wateringDialog.show()
 
     lifecycle.coroutineScope.launch(Dispatchers.IO) {
