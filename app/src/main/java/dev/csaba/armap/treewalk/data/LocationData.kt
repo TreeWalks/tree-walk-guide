@@ -10,6 +10,7 @@ data class LocationData(
     val height: String,
     val width: String,
     val scientificName: String,
+    val scientificAlternates: String,
     val englishData: LocalizedData,
     val spanishData: LocalizedData,
     val locationModel: LocationModel,
@@ -18,12 +19,12 @@ data class LocationData(
     val seGeoFenceModel: LocationModel,
     val swGeoFenceModel: LocationModel,
     var phylum: String,
-    var evergreen: Boolean = false,
-    var climateAction: Boolean = false,
-    var pollution: Boolean = false,
-    var traffic: Boolean = false,
-    var droughtTolerant: Boolean = false,
-    var californiaNative: Boolean = false,
+    var evergreen: Boolean,
+    var climateAction: Boolean,
+    var pollution: Boolean,
+    var traffic: Boolean,
+    var droughtTolerant: Boolean,
+    var californiaNative: Boolean,
     var visited: Boolean = false,
 ) {
     override fun equals(other: Any?): Boolean {
@@ -38,6 +39,8 @@ data class LocationData(
         if (kind != other.kind) return false
         if (height != other.height) return false
         if (width != other.width) return false
+        if (scientificName != other.scientificName) return false
+        if (scientificAlternates != other.scientificAlternates) return false
         if (englishData != other.englishData) return false
         if (spanishData != other.spanishData) return false
         if (locationModel != other.locationModel) return false
@@ -63,6 +66,8 @@ data class LocationData(
         result = 31 * result + kind.hashCode()
         result = 31 * result + height.hashCode()
         result = 31 * result + width.hashCode()
+        result = 31 * result + scientificName.hashCode()
+        result = 31 * result + scientificAlternates.hashCode()
         result = 31 * result + englishData.hashCode()
         result = 31 * result + spanishData.hashCode()
         result = 31 * result + locationModel.hashCode()

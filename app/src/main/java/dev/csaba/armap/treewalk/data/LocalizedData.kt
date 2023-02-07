@@ -2,6 +2,7 @@ package dev.csaba.armap.treewalk.data
 
 data class LocalizedData(
     val title: String,
+    val alternateNames: String,
     val description: String,
     val content: String,
     val url: String,
@@ -15,6 +16,7 @@ data class LocalizedData(
         other as LocalizedData
 
         if (title != other.title) return false
+        if (alternateNames != other.alternateNames) return false
         if (description != other.description) return false
         if (content != other.content) return false
         if (url != other.url) return false
@@ -26,6 +28,7 @@ data class LocalizedData(
 
     override fun hashCode(): Int {
         var result = title.hashCode()
+        result = 31 * result + alternateNames.hashCode()
         result = 31 * result + description.hashCode()
         result = 31 * result + content.hashCode()
         result = 31 * result + url.hashCode()

@@ -241,9 +241,12 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
   private fun processLocalizedData(localizedString: List<String>): LocalizedData {
     return LocalizedData(
       localizedString[0],
+      localizedString[4],
       localizedString[1],
       localizedString[2],
       localizedString[3],
+      localizedString[5],
+      localizedString[6],
     )
   }
 
@@ -270,16 +273,24 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
         nwGeoGps,
         seGeoGps,
         stopKind,
-        parts[7].trim(),
-        parts[8].trim(),
-        parts[9].trim(),
+        parts[7].trim(), // height
+        parts[8].trim(), // weight
+        parts[9].trim(), // scientificName
+        parts[10].trim(), // scientificAlternates
         processLocalizedData(splitAndCleanse(it[1])),
         processLocalizedData(splitAndCleanse(it[2])),
         LocationModel(pinGps, stopKind),
         LocationModel(nwGeoGps, ObjectKind.POST),
         LocationModel(LatLng(nwGeoLat, seGeoLon), ObjectKind.POST),
         LocationModel(seGeoGps, ObjectKind.POST),
-        LocationModel(LatLng(seGeoLat, nwGeoLon), ObjectKind.POST)
+        LocationModel(LatLng(seGeoLat, nwGeoLon), ObjectKind.POST),
+        parts[11].trim(), // phylum
+        parts[12].trim() == "true",
+        parts[13].trim() == "true",
+        parts[14].trim() == "true",
+        parts[15].trim() == "true",
+        parts[16].trim() == "true",
+        parts[17].trim() == "true",
       ))
 
       if (tweak) {
