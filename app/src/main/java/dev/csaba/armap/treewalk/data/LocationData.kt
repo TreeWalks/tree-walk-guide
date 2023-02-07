@@ -92,10 +92,10 @@ data class LocationData(
         }
     }
 
-    fun getLocalizedDescription(language: String): String {
+    fun getLocalizedContent(language: String): String {
         return when (language) {
-            "es" -> spanishData.description
-            else -> englishData.description
+            "es" -> spanishData.content
+            else -> englishData.content
         }
     }
 
@@ -103,6 +103,20 @@ data class LocationData(
         return when (language) {
             "es" -> spanishData.url
             else -> englishData.url
+        }
+    }
+
+    fun getLocalizedAlternateNames(language: String): String {
+        return when (language) {
+            "es" -> spanishData.alternateNames
+            else -> englishData.alternateNames
+        }
+    }
+
+    fun getLocalizedNativeTo(language: String): String {
+        return when (language) {
+            "es" -> spanishData.native
+            else -> englishData.native
         }
     }
 

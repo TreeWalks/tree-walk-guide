@@ -18,12 +18,8 @@ package dev.csaba.armap.treewalk
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.DialogInterface
+import android.content.*
 import android.content.DialogInterface.OnClickListener
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.location.Location
@@ -32,14 +28,11 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
+import android.text.Html
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -68,6 +61,8 @@ import com.oguzdev.circularfloatingactionmenu.library.SubActionButton
 import dev.csaba.armap.common.helpers.FullScreenHelper
 import dev.csaba.armap.common.samplerender.SampleRender
 import dev.csaba.armap.treewalk.data.AppState
+import dev.csaba.armap.treewalk.data.InfoRow
+import dev.csaba.armap.treewalk.data.ObjectKind
 import dev.csaba.armap.treewalk.helpers.*
 import io.reactivex.disposables.Disposables
 import io.reactivex.plugins.RxJavaPlugins
@@ -308,57 +303,122 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       )
       infoDialog.setButton(
         DialogInterface.BUTTON_NEUTRAL,
-        resources.getString(R.string.mark),
+        resources.getString(R.string.mark_visited),
         neutralButtonIcon,
         OnClickListener(function = neutralButtonClick)
-      )
-
-      val negativeButtonIcon = ContextCompat.getDrawable(baseContext, R.drawable.baseline_open_in_new_light_24)
-      negativeButtonIcon?.setBounds(
-        0, 0,
-        negativeButtonIcon.bounds.width() / 2,
-        negativeButtonIcon.bounds.width() / 2,
-      )
-      val negativeButtonClick = { _: DialogInterface, _: Int ->
-        openBrowserWindow(stop.getLocalizedUrl(currentLanguage), baseContext)
-      }
-      infoDialog.setButton(
-        DialogInterface.BUTTON_NEGATIVE,
-        resources.getString(R.string.page),
-        negativeButtonIcon,
-        OnClickListener(function = negativeButtonClick)
       )
 
       val nameTitle: TextView = dialogView.findViewById(R.id.nameTitle) as TextView
       nameTitle.text = "${targetStopNumber()}. ${stop.getLocalizedTitle(currentLanguage)}"
 
-      val latinNameText: TextView = dialogView.findViewById(R.id.latinNameText) as TextView
+      val scientificName: TextView = dialogView.findViewById(R.id.scientificName) as TextView
       if (stop.scientificName.isNotEmpty()) {
-        latinNameText.text = stop.scientificName
+        scientificName.text = stop.scientificName
+        scientificName.visibility = View.VISIBLE
       } else {
-        latinNameText.visibility = View.GONE
+        scientificName.visibility = View.GONE
       }
 
-      val heightText: TextView = dialogView.findViewById(R.id.heightText) as TextView
-      if (stop.height.isNotEmpty()) {
-        heightText.text = "${stop.height} '"
-      } else {
-        val heightTitle: TextView = dialogView.findViewById(R.id.heightTitle) as TextView
-        heightTitle.visibility = View.GONE
-        heightText.visibility = View.GONE
+      val infoList: ArrayList<InfoRow> = ArrayList<InfoRow>()
+      if (stop.kind == ObjectKind.TREE || stop.kind == ObjectKind.TREES) {
+        // 1. Scientific alternates (optional)
+        if (stop.scientificAlternates.isNotEmpty()) {
+          infoList.add(
+            InfoRow(
+              getString(R.string.scientific_alternates) + ":",
+              stop.scientificAlternates,
+            )
+          )
+        }
+
+        // 2. Alternate names (optional)
+        val alternateNames = stop.getLocalizedAlternateNames(currentLanguage)
+        if (alternateNames.isNotEmpty()) {
+          infoList.add(
+            InfoRow(
+              getString(R.string.alternate_names) + ":",
+              alternateNames,
+            )
+          )
+        }
+
+        // 3. Height (optional)
+        if (stop.height.isNotEmpty()) {
+          infoList.add(
+            InfoRow(
+              getString(R.string.height) + ":",
+              stop.height,
+            )
+          )
+        }
+
+        // 4. Width (optional)
+        if (stop.width.isNotEmpty()) {
+          infoList.add(
+            InfoRow(
+              getString(R.string.width) + ":",
+              stop.width,
+            )
+          )
+        }
+
+        // 5. Drought tolerant
+        infoList.add(
+          InfoRow(
+            getString(R.string.drought_tolerant) + ":",
+            getString(if (stop.droughtTolerant) R.string.yes else R.string.no),
+          )
+        )
+
+        // 6. Climate Action
+        infoList.add(
+          InfoRow(
+            getString(R.string.climate_action) + ":",
+            getString(if (stop.climateAction) R.string.yes else R.string.no),
+          )
+        )
+
+        // 7. Native to
+        val nativeTo = stop.getLocalizedNativeTo(currentLanguage)
+        if (nativeTo.isNotEmpty()) {
+          infoList.add(
+            InfoRow(
+              getString(R.string.native_to) + ":",
+              nativeTo,
+            )
+          )
+        }
       }
 
-      val widthText: TextView = dialogView.findViewById(R.id.widthText) as TextView
-      if (stop.width.isNotEmpty()) {
-        widthText.text = "${stop.width} '"
-      } else {
-        val widthTitle: TextView = dialogView.findViewById(R.id.widthTitle) as TextView
-        widthTitle.visibility = View.GONE
-        widthText.visibility = View.GONE
+      // 8. Fun fact
+      val funFact = stop.getLocalizedFunFact(currentLanguage)
+      if (funFact.isNotEmpty()) {
+        infoList.add(
+          InfoRow(
+            getString(R.string.fun_fact) + ":",
+            funFact,
+          )
+        )
       }
 
-      val descriptionText: TextView = dialogView.findViewById(R.id.descriptionText) as TextView
-      descriptionText.text = stop.getLocalizedDescription(currentLanguage)
+      // 9. Context
+      val htmlText = stop.getLocalizedContent(currentLanguage)
+      val contentText = Html.fromHtml(htmlText, Html.FROM_HTML_MODE_COMPACT)
+      infoList.add(
+        InfoRow(
+          getString(R.string.description) + ":",
+          contentText.toString(),
+        )
+      )
+
+      val infoListView: ListView = dialogView.findViewById(R.id.informationListView) as ListView
+      val arrayAdapter = InfoListAdapter(it.context, R.layout.info_row, infoList)
+      infoListView.adapter = arrayAdapter
+
+      val webPageButton: Button = dialogView.findViewById(R.id.webPageButton) as Button
+      webPageButton.setOnClickListener {
+        openBrowserWindow(stop.getLocalizedUrl(currentLanguage), baseContext)
+      }
 
       infoDialog.show()
     }

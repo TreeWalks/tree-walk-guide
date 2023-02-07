@@ -58,16 +58,21 @@
   <string name="leaderboard">Posiciones…</string>
   <string name="achievements">Logros…</string>
   <string name="alternate_names">Nombres Alternativos</string>
-  <string name="latin_name">Nombre científico</string>
-  <string name="latin_alternates">Sinonimos de nombres cientificos</string>
+  <string name="scientific_name">Nombre científico</string>
+  <string name="scientific_alternates">Sinonimos de nombres cientificos</string>
   <string name="height">Altura</string>
   <string name="width">Ancho</string>
-  <string name="description">descripción</string>
+  <string name="description">Información</string>
   <string name="web_page">Página web</string>
-  <string name="page">Página</string>
   <string name="screen_shot">Captura de pantalla</string>
   <string name="ok">OK</string>
-  <string name="mark">Marcar</string>
+  <string name="mark_visited">Visitado</string>
   <string name="close">Cerrar</string>
   <string name="experience_points">XP ganados!</string>
+  <string name="yes">Sí</string>
+  <string name="no">No</string>
+  <string name="drought_tolerant">Tolerante a la sequía</string>
+  <string name="climate_action">Acción Climática</string>
+  <string name="native_to">Nativo de</string>
+  <string name="fun_fact">Hechos graciosos</string>
 </resources>

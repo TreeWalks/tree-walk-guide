@@ -43,16 +43,21 @@
   <string name="leaderboard">Leaderboard…</string>
   <string name="achievements">Achievements…</string>
   <string name="alternate_names">Other common names</string>
-  <string name="latin_name">Scientific name</string>
-  <string name="latin_alternates">Scientific name synonyms</string>
+  <string name="scientific_name">Scientific name</string>
+  <string name="scientific_alternates">Scientific name synonyms</string>
   <string name="height">Height</string>
   <string name="width">Width</string>
-  <string name="description">description</string>
+  <string name="description">Info</string>
   <string name="web_page">Web page</string>
-  <string name="page">Page</string>
   <string name="screen_shot">Screen Shot</string>
   <string name="ok">OK</string>
-  <string name="mark">Mark</string>
+  <string name="mark_visited">Visited</string>
   <string name="close">Close</string>
   <string name="experience_points">XP gained!</string>
+  <string name="yes">Yes</string>
+  <string name="no">No</string>
+  <string name="drought_tolerant">Drought tolerant</string>
+  <string name="climate_action">Climate Action</string>
+  <string name="native_to">Native to</string>
+  <string name="fun_fact">Fun fact</string>
 </resources>
