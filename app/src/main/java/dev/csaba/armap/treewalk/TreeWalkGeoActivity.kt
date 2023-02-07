@@ -151,6 +151,14 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     return (targetStopIndex + 1) % renderer.stops.size
   }
 
+  private fun nextStopNumber(): Int {
+    if (renderer.stops.isEmpty()) {
+      return -1
+    }
+
+    return nextStopIndex() + 1
+  }
+
   private fun createCircularFABMenu() {
     // Set up the white button on the lower right corner
     // more or less with default parameter
@@ -876,7 +884,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     targetStopIndex = nextStopIndex()
     val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
     with (sharedPref.edit()) {
-      putInt("current_stop", targetStopNumber())
+      putInt("current_stop", nextStopNumber())
       apply()
     }
   }
