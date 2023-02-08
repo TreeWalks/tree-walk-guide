@@ -336,7 +336,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
       val infoList: ArrayList<InfoRow> = ArrayList<InfoRow>()
       if (stop.kind == ObjectKind.TREE || stop.kind == ObjectKind.TREES) {
-        // 1. Scientific alternates (optional)
+        // Scientific alternates (optional)
         if (stop.scientificAlternates.isNotEmpty()) {
           infoList.add(
             InfoRow(
@@ -346,7 +346,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           )
         }
 
-        // 2. Alternate names (optional)
+        // Alternate names (optional)
         val alternateNames = stop.getLocalizedAlternateNames(currentLanguage)
         if (alternateNames.isNotEmpty()) {
           infoList.add(
@@ -357,7 +357,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           )
         }
 
-        // 3. Height (optional)
+        // Height (optional)
         if (stop.height.isNotEmpty()) {
           infoList.add(
             InfoRow(
@@ -367,7 +367,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           )
         }
 
-        // 4. Width (optional)
+        // Width (optional)
         if (stop.width.isNotEmpty()) {
           infoList.add(
             InfoRow(
@@ -393,7 +393,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           )
         )
 
-        // 6. Climate Action
+        // Climate Action
         infoList.add(
           InfoRow(
             getString(R.string.climate_action) + ":",
@@ -401,7 +401,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           )
         )
 
-        // 7. Native to
+        // Native to
         val nativeTo = stop.getLocalizedNativeTo(currentLanguage)
         if (nativeTo.isNotEmpty()) {
           infoList.add(
@@ -413,7 +413,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         }
       }
 
-      // 8. Fun fact
+      // Fun fact
       val funFact = stop.getLocalizedFunFact(currentLanguage)
       if (funFact.isNotEmpty()) {
         infoList.add(
