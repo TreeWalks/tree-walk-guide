@@ -377,7 +377,15 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           )
         }
 
-        // 5. Drought tolerant
+        // Evergreen
+        infoList.add(
+          InfoRow(
+            getString(R.string.evergreen) + ":",
+            getString(if (stop.evergreen) R.string.yes else R.string.no),
+          )
+        )
+
+        // Drought tolerant
         infoList.add(
           InfoRow(
             getString(R.string.drought_tolerant) + ":",
