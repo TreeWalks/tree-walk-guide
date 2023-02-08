@@ -424,7 +424,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         )
       }
 
-      // 9. Context
+      // Content
       val htmlText = stop.getLocalizedContent(currentLanguage)
       val contentText = Html.fromHtml(htmlText, Html.FROM_HTML_MODE_COMPACT)
       infoList.add(
