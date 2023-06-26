@@ -52,7 +52,7 @@ import com.google.android.gms.games.PlayGames
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.ar.core.Config
-import com.google.ar.core.SemanticsLabel
+// import com.google.ar.core.SemanticsLabel
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton
@@ -171,13 +171,13 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       .build()
 
     val fabSubBuilder: SubActionButton.Builder = SubActionButton.Builder(this)
-    val wateringIcon = ImageView(this)
+    // val wateringIcon = ImageView(this)
     val translateIcon = ImageView(this)
     val informationIcon = ImageView(this)
     val settingsIcon = ImageView(this)
     val gameIcon = ImageView(this)
 
-    wateringIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_shower_24))
+    // wateringIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_shower_24))
     translateIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_translate_24))
     informationIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_info_outline_24))
     settingsIcon.setImageDrawable(ContextCompat.getDrawable(baseContext, R.drawable.baseline_settings_24))
@@ -187,7 +187,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
     // Set default SubActionButtons
     val circularMenu: FloatingActionMenu = FloatingActionMenu.Builder(this)
       .setRadius(500)
-      .addSubActionView(fabSubBuilder.setContentView(wateringIcon).build(), 196, 196)
+      // .addSubActionView(fabSubBuilder.setContentView(wateringIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(translateIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(informationIcon).build(), 196, 196)
       .addSubActionView(fabSubBuilder.setContentView(settingsIcon).build(), 196, 196)
@@ -229,6 +229,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       startActivityForResult(settingsIntent, RC_APPLY_SETTINGS)
     }
 
+    /*
     wateringIcon.setOnClickListener {
       if (targetStopIndex < 0) {
         showResourceMessage(R.string.missing_target)
@@ -248,6 +249,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
         }
       }
     }
+    */
 
     gameIcon.setOnClickListener {
       val gameDialog = AlertDialog.Builder(this).create()
@@ -511,8 +513,8 @@ class TreeWalkGeoActivity : AppCompatActivity() {
       Log.e("Error", it.localizedMessage ?: "")
     }
 
-    val arCoreVersion: Long = packageManager.getVersionCodeCompat("com.google.ar.core")
-    hasSemanticApi = arCoreVersion >= 223620091
+    // val arCoreVersion: Long = packageManager.getVersionCodeCompat("com.google.ar.core")
+    // hasSemanticApi = arCoreVersion >= 223620091
 
     // Setup ARCore session lifecycle helper and configuration.
     arCoreSessionHelper = ARCoreSessionLifecycleHelper(this)
@@ -738,7 +740,7 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           // https://developers.google.com/ar/develop/java/geospatial/terrain-anchors
           planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
           // https://developers.google.com/ar/geospatial-api-challenge/semantics-api/java
-          semanticsMode = Config.SemanticsMode.ENABLED
+          // semanticsMode = Config.SemanticsMode.ENABLED
         }
       else
         session.config.apply {
@@ -877,11 +879,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
           val byteIndex =
             floor(y / widthScale) * semanticsPlane.pixelStride +
             floor(mirroredX / heightScale) * semanticsPlane.rowStride
-          if (semanticsPlane.buffer.get(byteIndex.toInt()).toInt() != SemanticsLabel.TREE.ordinal) {
-            blendedBitmap[x, y] = greyScaleWithFade(cameraBitmap[y, mirroredX], 0.3)
-          } else {
-            blendedBitmap[x, y] = greenFade(cameraBitmap[y, mirroredX], 2)
-          }
+          // if (semanticsPlane.buffer.get(byteIndex.toInt()).toInt() != SemanticsLabel.TREE.ordinal) {
+          //  blendedBitmap[x, y] = greyScaleWithFade(cameraBitmap[y, mirroredX], 0.3)
+          // } else {
+          //  blendedBitmap[x, y] = greenFade(cameraBitmap[y, mirroredX], 2)
+          // }
 
           pixelIndex += 1
           if (pixelIndex % percentStride == 0) {
