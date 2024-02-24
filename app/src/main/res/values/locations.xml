@@ -21,7 +21,7 @@
     <item>36.812161|-119.750574|36.812183|-119.750764|36.811652|-119.750448|tree|300|100|Sequoiadendron giganteum||gymnosperm|true|true|true|||true</item>
     <item>36.812234|-119.750993|36.812722|-119.751115|36.812223|-119.750952|trees|20|20|Chamaerops humilis||angiosperm|true|false|true||true|false</item>
     <item>36.813535|-119.750799|36.813856|-119.750857|36.813514|-119.750675|trees|30|30|Olea europaea||angiosperm|true|false|true||true|false</item>
-    <item>36.814492|-119.750421|36.814677|-119.750455|36.814276|-119.750222|trees|30-80|30|Quercus kelloggii||angiosperm|false|||false||true</item>
+    <!--<item>36.814492|-119.750421|36.814677|-119.750455|36.814276|-119.750222|trees|30-80|30|Quercus kelloggii||angiosperm|false|||false||true</item>-->
     <item>36.814224|-119.750265|36.814252|-119.750302|36.8142|-119.749167|tree|20|20|Cercis occidentalis||angiosperm|false|||false|true|true</item>
     <item>36.814215|-119.750265|36.814352|-119.749121|36.814127|-119.748727|tree|30-60|20-30|Pinus halepensis||gymnosperm|true|true|true||true|false</item>
     <item>36.813851|-119.748992|36.81397|-119.74914|36.813593|-119.74875|tree|50-90|40|Alnus rhombifolia||angiosperm|false|true||false||true</item>
