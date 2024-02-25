@@ -254,7 +254,7 @@ class TreeWalkGeoRenderer(val activity: TreeWalkGeoActivity) :
       return
     }
 
-    val takeCount = if (tweak) locations.size else min(3, locations.size)
+    val takeCount = if (tweak) min(3, locations.size) else locations.size
     var startLat = (loc?.latitude ?: 0.0) + TWEAK_GPS_DY / 10.0
     val startLon = loc?.longitude ?: 0.0
     zipMulti(locations.takeLast(takeCount), locationsEn.takeLast(takeCount), locationsEs.takeLast(takeCount)) {
