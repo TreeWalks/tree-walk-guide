@@ -25,6 +25,7 @@ import android.graphics.Bitmap
 import android.location.Location
 import android.media.Image
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
@@ -608,7 +609,11 @@ class TreeWalkGeoActivity : AppCompatActivity() {
 
   override fun onResume() {
     super.onResume()
-    registerReceiver(broadcastReceiver, IntentFilter(WATERING_BROADCAST_FILTER))
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      registerReceiver(broadcastReceiver, IntentFilter(WATERING_BROADCAST_FILTER), RECEIVER_NOT_EXPORTED)
+    } else {
+      registerReceiver(broadcastReceiver, IntentFilter(WATERING_BROADCAST_FILTER))
+    }
   }
 
   override fun onPause() {
